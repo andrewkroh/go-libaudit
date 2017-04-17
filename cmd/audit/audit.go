@@ -33,10 +33,12 @@ import (
 )
 
 var (
-	fs     = flag.NewFlagSet("audit", flag.ExitOnError)
-	debug  = fs.Bool("d", false, "enable debug output to stderr")
-	diag   = fs.String("diag", "", "dump raw information from kernel to file")
-	format = fs.String("format", "", "output format, possible values - json, coalesce")
+	fs      = flag.NewFlagSet("audit", flag.ExitOnError)
+	debug   = fs.Bool("d", false, "enable debug output to stderr")
+	rate    = fs.Uint("rate", 0, "rate limit")
+	backlog = fs.Uint("backlog", 8192, "backlog limit")
+	diag    = fs.String("diag", "", "dump raw information from kernel to file")
+	format  = fs.String("format", "", "output format, possible values - json, coalesce")
 )
 
 func enableLogger() {
@@ -95,6 +97,14 @@ func read() error {
 		if err = client.SetEnabled(true, libaudit.WaitForReply); err != nil {
 			return errors.Wrap(err, "failed to set enabled=true")
 		}
+	}
+
+	if err = client.SetRateLimit(uint32(*rate), libaudit.NoWait); err != nil {
+		return errors.Wrap(err, "failed to set rate limit to unlimited")
+	}
+
+	if err = client.SetBacklogLimit(uint32(*backlog), libaudit.NoWait); err != nil {
+		return errors.Wrap(err, "failed to set backlog limit")
 	}
 
 	log.Debugf("sending message to kernel registering our PID (%v) as the audit daemon", os.Getpid())
