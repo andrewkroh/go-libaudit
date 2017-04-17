@@ -149,15 +149,6 @@ func read() error {
 	return nil
 }
 
-func printJSON(v interface{}) error {
-	jsonBytes, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(jsonBytes))
-	return nil
-}
-
 type streamHandler struct{}
 
 func (s *streamHandler) ReassemblyComplete(msgs []*auparse.AuditMessage) {
@@ -187,4 +178,13 @@ func (s *streamHandler) ReassemblyComplete(msgs []*auparse.AuditMessage) {
 
 func (s *streamHandler) EventsLost(count int) {
 	log.Infof("Detected the loss of %v sequences.", count)
+}
+
+func printJSON(v interface{}) error {
+	jsonBytes, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(jsonBytes))
+	return nil
 }
