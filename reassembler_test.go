@@ -1,18 +1,19 @@
-package aucoalesce
+package libaudit
 
 import (
 	"bufio"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/elastic/go-libaudit/auparse"
-	"github.com/stretchr/testify/assert"
-	"time"
 )
 
 type testStream struct {
-	events     [][]*auparse.AuditMessage
-	dropped    int
+	events  [][]*auparse.AuditMessage
+	dropped int
 }
 
 func (s *testStream) ReassemblyComplete(msgs []*auparse.AuditMessage) {
@@ -84,7 +85,7 @@ func testReassembler(t testing.TB, file string, expected *results) {
 	defer f.Close()
 
 	stream := &testStream{events: make([][]*auparse.AuditMessage, 0, 10)}
-	reassmbler, err := NewReassembler(5, 2 * time.Second, stream)
+	reassmbler, err := NewReassembler(5, 2*time.Second, stream)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +115,7 @@ func testReassembler(t testing.TB, file string, expected *results) {
 		}
 
 		for _, msg := range stream.events[i] {
-			assert.Equal(t, expectedEvent.seq, msg.Sequence, "sequence number")
+			assert.EqualValues(t, expectedEvent.seq, msg.Sequence, "sequence number")
 		}
 		assert.Equal(t, expectedEvent.count, len(stream.events[i]), "message count")
 	}

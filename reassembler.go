@@ -1,4 +1,4 @@
-package aucoalesce
+package libaudit
 
 import (
 	"sort"
@@ -8,6 +8,15 @@ import (
 
 	"github.com/elastic/go-libaudit/auparse"
 )
+
+type sequenceNum uint64
+
+type sequenceNumSlice []sequenceNum
+
+func (p sequenceNumSlice) Len() int           { return len(p) }
+func (p sequenceNumSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p sequenceNumSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p sequenceNumSlice) Sort()              { sort.Sort(p) }
 
 // Stream is implemented by the user of the Reassembler to handle reassembled
 // audit data.
@@ -42,17 +51,17 @@ func (e *event) IsExpired() bool {
 }
 
 type eventList struct {
-	seqs    sort.IntSlice
-	events  map[int]*event
-	lastSeq int
+	seqs    sequenceNumSlice
+	events  map[sequenceNum]*event
+	lastSeq sequenceNum
 	maxSize int
 	timeout time.Duration
 }
 
 func newEventList(maxSize int, timeout time.Duration) *eventList {
 	return &eventList{
-		seqs:    make([]int, 0, maxSize+1),
-		events:  make(map[int]*event, maxSize+1),
+		seqs:    make([]sequenceNum, 0, maxSize+1),
+		events:  make(map[sequenceNum]*event, maxSize+1),
 		maxSize: maxSize,
 		timeout: timeout,
 	}
@@ -70,7 +79,8 @@ func (l *eventList) Remove() {
 // Clear removes all events from the list and returns the events and the number
 // of list events.
 func (l *eventList) Clear() ([]*event, int) {
-	var lost, seq int
+	var lost int
+	var seq sequenceNum
 	var evicted []*event
 	for {
 		size := len(l.seqs)
@@ -83,7 +93,7 @@ func (l *eventList) Clear() ([]*event, int) {
 		event := l.events[seq]
 
 		if l.lastSeq > 0 {
-			lost += seq - l.lastSeq - 1
+			lost += int(seq - l.lastSeq - 1)
 		}
 		l.lastSeq = seq
 		evicted = append(evicted, event)
@@ -95,23 +105,25 @@ func (l *eventList) Clear() ([]*event, int) {
 
 // Put a new message in the list.
 func (l *eventList) Put(msg *auparse.AuditMessage) {
-	e, found := l.events[msg.Sequence]
+	seq := sequenceNum(msg.Sequence)
+	e, found := l.events[seq]
 	if !found {
-		l.seqs = append(l.seqs, msg.Sequence)
+		l.seqs = append(l.seqs, seq)
 		l.seqs.Sort()
 
 		e = &event{
 			expireTime: time.Now(),
 			msgs:       make([]*auparse.AuditMessage, 0, 4),
 		}
-		l.events[msg.Sequence] = e
+		l.events[seq] = e
 	}
 
 	e.Add(msg)
 }
 
 func (l *eventList) CleanUp() ([]*event, int) {
-	var lost, seq int
+	var lost int
+	var seq sequenceNum
 	var evicted []*event
 	for {
 		size := len(l.seqs)
@@ -125,7 +137,7 @@ func (l *eventList) CleanUp() ([]*event, int) {
 
 		if event.complete || size > l.maxSize || event.IsExpired() {
 			if l.lastSeq > 0 {
-				lost += seq - l.lastSeq - 1
+				lost += int(seq - l.lastSeq - 1)
 			}
 			l.lastSeq = seq
 			evicted = append(evicted, event)
@@ -160,7 +172,7 @@ func NewReassembler(maxInFlight int, timeout time.Duration, stream Stream) (*Rea
 	}, nil
 }
 
-func (r *Reassembler) Push(msg *auparse.AuditMessage) {
+func (r *Reassembler) PushMessage(msg *auparse.AuditMessage) {
 	if msg == nil {
 		return
 	}
@@ -168,6 +180,16 @@ func (r *Reassembler) Push(msg *auparse.AuditMessage) {
 	r.list.Put(msg)
 	evicted, lost := r.list.CleanUp()
 	r.callback(evicted, lost)
+}
+
+func (r *Reassembler) Push(typ uint16, rawData []byte) error {
+	msg, err := auparse.Parse(auparse.AuditMessageType(typ), string(rawData))
+	if err != nil {
+		return err
+	}
+
+	r.PushMessage(msg)
+	return nil
 }
 
 func (r *Reassembler) Close() error {

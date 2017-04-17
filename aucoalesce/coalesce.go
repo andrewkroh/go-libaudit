@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func coalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, error) {
+func CoalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, error) {
 	if len(msgs) == 0 {
 		return nil, errors.New("messages is empty")
 	}
@@ -19,6 +19,8 @@ func coalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, err
 	}
 
 	for _, msg := range msgs {
+		data, _ := msg.Data()
+
 		switch msg.RecordType {
 		default:
 			addRecord(msg, event)
@@ -27,8 +29,8 @@ func coalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, err
 		case auparse.AUDIT_CWD:
 			addCWDRecord(msg, event)
 		case auparse.AUDIT_SYSCALL:
-			rename("syscall", "name", msg.Data)
-			delete(msg.Data, "items")
+			rename("syscall", "name", data)
+			delete(data, "items")
 			addRecord(msg, event)
 		}
 	}
@@ -38,7 +40,8 @@ func coalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, err
 
 func addRecord(msg *auparse.AuditMessage, event map[string]interface{}) {
 	recordType := strings.ToLower(msg.RecordType.String())
-	event[recordType] = msg.Data
+	data, _ := msg.Data()
+	event[recordType] = data
 }
 
 func addPathRecord(msg *auparse.AuditMessage, event map[string]interface{}) {
@@ -47,12 +50,14 @@ func addPathRecord(msg *auparse.AuditMessage, event map[string]interface{}) {
 		paths = make([]map[string]string, 0, 1)
 	}
 
-	paths = append(paths, msg.Data)
+	data, _ := msg.Data()
+	paths = append(paths, data)
 	event["path"] = paths
 }
 
 func addCWDRecord(msg *auparse.AuditMessage, event map[string]interface{}) {
-	cwd, found := msg.Data["cwd"]
+	data, _ := msg.Data()
+	cwd, found := data["cwd"]
 	if !found {
 		return
 	}

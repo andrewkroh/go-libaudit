@@ -44,12 +44,34 @@ var (
 
 // AuditMessage represents a single audit message.
 type AuditMessage struct {
-	RecordType AuditMessageType  // Record type from netlink header.
-	Timestamp  time.Time         // Timestamp parsed from payload in netlink message.
-	Sequence   int               // Sequence parsed from payload.
-	RawData    string            // Raw message as a string.
-	Data       map[string]string // The key value pairs parsed from the message.
-	Error      error             // Error that occurred while parsing.
+	RecordType AuditMessageType // Record type from netlink header.
+	Timestamp  time.Time        // Timestamp parsed from payload in netlink message.
+	Sequence   uint32           // Sequence parsed from payload.
+	RawData    string           // Raw message as a string.
+
+	offset int               // offset is the index into RawData where the header ends and message begins.
+	data   map[string]string // The key value pairs parsed from the message.
+	error  error             // Error that occurred while parsing.
+}
+
+func (m *AuditMessage) Data() (map[string]string, error) {
+	if m.data != nil || m.error != nil {
+		return m.data, m.error
+	}
+
+	message, err := normalizeAuditMessage(m.RecordType, m.RawData[m.offset:])
+	if err != nil {
+		return nil, err
+	}
+
+	m.data = map[string]string{}
+	extractKeyValuePairs(message, m.data)
+
+	if err = enrichData(m); err != nil {
+		m.error = err
+	}
+
+	return m.data, m.error
 }
 
 // ToMapStr returns a new map containing the parsed key value pairs, the
@@ -58,17 +80,20 @@ type AuditMessage struct {
 // If an error occurred while parsing the message then an error key will be
 // present.
 func (m *AuditMessage) ToMapStr() map[string]string {
-	out := make(map[string]string, len(m.Data)+4)
-	for k, v := range m.Data {
+	// Ensure event has been parsed.
+	m.Data()
+
+	out := make(map[string]string, len(m.data)+4)
+	for k, v := range m.data {
 		out[k] = v
 	}
 
 	out["record_type"] = m.RecordType.String()
 	out["@timestamp"] = m.Timestamp.UTC().String()
-	out["sequence"] = strconv.Itoa(m.Sequence)
+	out["sequence"] = strconv.FormatUint(uint64(m.Sequence), 10)
 	out["raw_msg"] = m.RawData
-	if m.Error != nil {
-		out["error"] = m.Error.Error()
+	if m.error != nil {
+		out["error"] = m.error.Error()
 	}
 	return out
 }
@@ -108,96 +133,76 @@ func ParseLogLine(line string) (*AuditMessage, error) {
 // how much parsing occurred prior to the error. But if an error does occur you
 // can be sure that parsing is not complete.
 func Parse(typ AuditMessageType, message string) (*AuditMessage, error) {
+	message = strings.TrimSpace(message)
+
+	timestamp, seq, end, err := parseAuditHeader([]byte(message))
+	if err != nil {
+		return nil, err
+	}
+
 	msg := &AuditMessage{
 		RecordType: typ,
-		RawData:    strings.TrimSpace(message),
+		Timestamp:  timestamp,
+		Sequence:   seq,
+		offset:     indexOfMessage(message[end:]),
+		RawData:    message,
 	}
-
-	timestamp, seq, err := parseAuditHeader([]byte(message))
-	if err != nil {
-		msg.Error = err
-		return msg, err
-	}
-
-	msg.Timestamp = timestamp
-	msg.Sequence = seq
-
-	message, err = removeAuditHeader(message)
-	if err != nil {
-		return msg, err
-	}
-
-	message, err = normalizeAuditMessage(typ, message)
-	if err != nil {
-		return msg, err
-	}
-
-	msg.Data = map[string]string{}
-	extractKeyValuePairs(message, msg.Data)
-	if err != nil {
-		msg.Error = err
-		return msg, err
-	}
-
-	if err = enrichData(msg); err != nil {
-		msg.Error = err
-		return msg, err
-	}
-
 	return msg, nil
 }
 
 // parseAuditHeader parses the timestamp and sequence number from the audit
 // message header that has the form of "audit(1490137971.011:50406):".
-func parseAuditHeader(line []byte) (time.Time, int, error) {
+func parseAuditHeader(line []byte) (time.Time, uint32, int, error) {
 	// Find tokens.
 	start := bytes.IndexRune(line, '(')
 	if start == -1 {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 	dot := bytes.IndexRune(line[start:], '.')
 	if dot == -1 {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 	dot += start
 	sep := bytes.IndexRune(line[dot:], ':')
 	if sep == -1 {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 	sep += dot
 	end := bytes.IndexRune(line[sep:], ')')
 	if end == -1 {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 	end += sep
 
 	// Parse timestamp.
 	sec, err := strconv.ParseInt(string(line[start+1:dot]), 10, 64)
 	if err != nil {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 	msec, err := strconv.ParseInt(string(line[dot+1:sep]), 10, 64)
 	if err != nil {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 	tm := time.Unix(sec, msec*int64(time.Millisecond)).UTC()
 
 	// Parse sequence.
-	sequence, err := strconv.Atoi(string(line[sep+1 : end]))
+	sequence, err := strconv.ParseUint(string(line[sep+1:end]), 10, 32)
 	if err != nil {
-		return time.Time{}, 0, errInvalidAuditHeader
+		return time.Time{}, 0, 0, errInvalidAuditHeader
 	}
 
-	return tm, sequence, nil
+	return tm, uint32(sequence), end, nil
 }
 
-func removeAuditHeader(msg string) (string, error) {
-	start := strings.Index(msg, auditHeaderSeparator)
-	if start == -1 {
-		return "", errParseFailure
-	}
-
-	return strings.TrimLeft(msg[start:], ": "), nil
+func indexOfMessage(msg string) int {
+	return strings.IndexFunc(msg, func(r rune) bool {
+		switch r {
+		case ':', ' ':
+			return true
+		default:
+			return false
+		}
+	})
 }
 
 // Key/Value Parsing Helpers
@@ -263,42 +268,42 @@ func trimQuotesAndSpace(v string) string {
 func enrichData(msg *AuditMessage) error {
 	switch msg.RecordType {
 	case AUDIT_SYSCALL:
-		if err := arch(msg.Data); err != nil {
+		if err := arch(msg.data); err != nil {
 			return err
 		}
-		if err := syscall(msg.Data); err != nil {
+		if err := syscall(msg.data); err != nil {
 			return err
 		}
-		if err := hexDecode("exe", msg.Data); err != nil {
+		if err := hexDecode("exe", msg.data); err != nil {
 			return err
 		}
-		normalizeAUID(msg.Data)
+		normalizeAUID(msg.data)
 	case AUDIT_SOCKADDR:
-		if err := saddr(msg.Data); err != nil {
+		if err := saddr(msg.data); err != nil {
 			return err
 		}
 	case AUDIT_PROCTITLE:
-		if err := hexDecode("proctitle", msg.Data); err != nil {
+		if err := hexDecode("proctitle", msg.data); err != nil {
 			return err
 		}
 	case AUDIT_USER_CMD:
-		if err := hexDecode("cmd", msg.Data); err != nil {
+		if err := hexDecode("cmd", msg.data); err != nil {
 			return err
 		}
 	case AUDIT_TTY, AUDIT_USER_TTY:
-		if err := hexDecode("data", msg.Data); err != nil {
+		if err := hexDecode("data", msg.data); err != nil {
 			return err
 		}
 	case AUDIT_EXECVE:
-		if err := execveCmdline(msg.Data); err != nil {
+		if err := execveCmdline(msg.data); err != nil {
 			return err
 		}
 	case AUDIT_PATH:
-		parseSELinuxContext("obj", msg.Data)
+		parseSELinuxContext("obj", msg.data)
 	}
 
 	// Many different message types can have subj field so check them all.
-	parseSELinuxContext("subj", msg.Data)
+	parseSELinuxContext("subj", msg.data)
 
 	return nil
 }
