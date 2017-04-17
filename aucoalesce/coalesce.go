@@ -3,9 +3,9 @@ package aucoalesce
 import (
 	"strings"
 
-	"github.com/elastic/go-libaudit/auparse"
-
 	"github.com/pkg/errors"
+
+	"github.com/elastic/go-libaudit/auparse"
 )
 
 func CoalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, error) {
@@ -32,6 +32,7 @@ func CoalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, err
 			rename("syscall", "name", data)
 			delete(data, "items")
 			addRecord(msg, event)
+		case auparse.AUDIT_EOE:
 		}
 	}
 
