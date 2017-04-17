@@ -4,8 +4,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/elastic/go-libaudit/auparse"
 	"github.com/pkg/errors"
+
+	"github.com/elastic/go-libaudit/auparse"
 )
 
 // Stream is implemented by the user of the Reassembler to handle reassembled
@@ -20,13 +21,6 @@ type Stream interface {
 	// by a slow receiver or because the kernel is configured to rate limit
 	// events.
 	EventsLost(count int)
-}
-
-type EvictionCallback func(msgs []*auparse.AuditMessage)
-
-type Config struct {
-	MaxInFlight int           // MaxInFlight controls the cache size.
-	Timeout     time.Duration // Timeout controls the maximum amount of time an event will wait in the cache for an EOE message before being flushed.
 }
 
 type event struct {
@@ -52,16 +46,19 @@ type eventList struct {
 	events  map[int]*event
 	lastSeq int
 	maxSize int
+	timeout time.Duration
 }
 
-func newEventList(maxSize int) *eventList {
+func newEventList(maxSize int, timeout time.Duration) *eventList {
 	return &eventList{
 		seqs:    make([]int, 0, maxSize+1),
 		events:  make(map[int]*event, maxSize+1),
 		maxSize: maxSize,
+		timeout: timeout,
 	}
 }
 
+// Remove the first event (lowest sequence) in the list.
 func (l *eventList) Remove() {
 	if len(l.seqs) > 0 {
 		seq := l.seqs[0]
@@ -70,6 +67,33 @@ func (l *eventList) Remove() {
 	}
 }
 
+// Clear removes all events from the list and returns the events and the number
+// of list events.
+func (l *eventList) Clear() ([]*event, int) {
+	var lost, seq int
+	var evicted []*event
+	for {
+		size := len(l.seqs)
+		if size == 0 {
+			break
+		}
+
+		// Get event.
+		seq = l.seqs[0]
+		event := l.events[seq]
+
+		if l.lastSeq > 0 {
+			lost += seq - l.lastSeq - 1
+		}
+		l.lastSeq = seq
+		evicted = append(evicted, event)
+		l.Remove()
+	}
+
+	return evicted, lost
+}
+
+// Put a new message in the list.
 func (l *eventList) Put(msg *auparse.AuditMessage) {
 	e, found := l.events[msg.Sequence]
 	if !found {
@@ -121,26 +145,17 @@ type Reassembler struct {
 	// (lowest sequence is evicted first), or an event expires base on time.
 	list *eventList
 
-	// lastSeq is sequence number of the last event delivered to the stream.
-	lastSeq int
-
 	// stream is the callback interface used for delivering completed events.
 	stream Stream
-
-	// sort
-	// iterate
-	// find gap
-	// diff
-	// replace oldest, update head
 }
 
-func NewReassembler(config Config, stream Stream) (*Reassembler, error) {
+func NewReassembler(maxInFlight int, timeout time.Duration, stream Stream) (*Reassembler, error) {
 	if stream == nil {
 		return nil, errors.New("stream cannot be nil")
 	}
 
 	return &Reassembler{
-		list:   newEventList(config.MaxInFlight),
+		list:   newEventList(maxInFlight, timeout),
 		stream: stream,
 	}, nil
 }
@@ -152,40 +167,21 @@ func (r *Reassembler) Push(msg *auparse.AuditMessage) {
 
 	r.list.Put(msg)
 	evicted, lost := r.list.CleanUp()
+	r.callback(evicted, lost)
+}
 
-	for _, e := range evicted {
+func (r *Reassembler) Close() error {
+	evicted, lost := r.list.Clear()
+	r.callback(evicted, lost)
+	return nil
+}
+
+func (r *Reassembler) callback(events []*event, lost int) {
+	for _, e := range events {
 		r.stream.ReassemblyComplete(e.msgs)
 	}
 
 	if lost > 0 {
 		r.stream.EventsLost(lost)
 	}
-}
-
-func (r *Reassembler) Close() error {
-	lost := 0
-
-	for {
-		size := len(r.list.seqs)
-		if size == 0 {
-			break
-		}
-
-		// Get event.
-		seq := r.list.seqs[0]
-		event := r.list.events[seq]
-
-		if r.list.lastSeq > 0 {
-			lost += seq - r.list.lastSeq - 1
-		}
-		r.list.lastSeq = seq
-		r.stream.ReassemblyComplete(event.msgs)
-		r.list.Remove()
-	}
-
-	if lost > 0 {
-		r.stream.EventsLost(lost)
-	}
-
-	return nil
 }

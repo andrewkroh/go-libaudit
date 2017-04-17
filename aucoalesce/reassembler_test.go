@@ -13,7 +13,6 @@ import (
 type testStream struct {
 	events     [][]*auparse.AuditMessage
 	dropped    int
-	outOfOrder int
 }
 
 func (s *testStream) ReassemblyComplete(msgs []*auparse.AuditMessage) {
@@ -21,7 +20,6 @@ func (s *testStream) ReassemblyComplete(msgs []*auparse.AuditMessage) {
 }
 
 func (s *testStream) EventsLost(count int) { s.dropped += count }
-func (s *testStream) OutOfOrder()          { s.outOfOrder++ }
 
 func TestReassembler(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
@@ -86,7 +84,7 @@ func testReassembler(t testing.TB, file string, expected *results) {
 	defer f.Close()
 
 	stream := &testStream{events: make([][]*auparse.AuditMessage, 0, 10)}
-	reassmbler, err := NewReassembler(Config{10, 2 * time.Second}, stream)
+	reassmbler, err := NewReassembler(5, 2 * time.Second, stream)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +108,6 @@ func testReassembler(t testing.TB, file string, expected *results) {
 	}
 
 	assert.EqualValues(t, expected.dropped, stream.dropped, "dropped messages")
-	assert.EqualValues(t, expected.outOfOrder, stream.outOfOrder, "out of order messages")
 	for i, expectedEvent := range expected.events {
 		if len(stream.events) <= i {
 			t.Fatal("less events received than expected")
