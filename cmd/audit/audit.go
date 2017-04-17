@@ -99,12 +99,18 @@ func read() error {
 		}
 	}
 
-	if err = client.SetRateLimit(uint32(*rate), libaudit.NoWait); err != nil {
-		return errors.Wrap(err, "failed to set rate limit to unlimited")
+	if status.RateLimit != uint32(*rate) {
+		log.Debugf("setting rate limit in kernel to %v", *rate)
+		if err = client.SetRateLimit(uint32(*rate), libaudit.NoWait); err != nil {
+			return errors.Wrap(err, "failed to set rate limit to unlimited")
+		}
 	}
 
-	if err = client.SetBacklogLimit(uint32(*backlog), libaudit.NoWait); err != nil {
-		return errors.Wrap(err, "failed to set backlog limit")
+	if status.BacklogLimit != uint32(*backlog) {
+		log.Debugf("setting backlog limit in kernel to %v", *backlog)
+		if err = client.SetBacklogLimit(uint32(*backlog), libaudit.NoWait); err != nil {
+			return errors.Wrap(err, "failed to set backlog limit")
+		}
 	}
 
 	log.Debugf("sending message to kernel registering our PID (%v) as the audit daemon", os.Getpid())
