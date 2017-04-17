@@ -272,6 +272,7 @@ func enrichData(msg *AuditMessage) error {
 		if err := hexDecode("exe", msg.Data); err != nil {
 			return err
 		}
+		normalizeAUID(msg.Data)
 	case AUDIT_SOCKADDR:
 		if err := saddr(msg.Data); err != nil {
 			return err
@@ -292,6 +293,8 @@ func enrichData(msg *AuditMessage) error {
 		if err := execveCmdline(msg.Data); err != nil {
 			return err
 		}
+	case AUDIT_PATH:
+		parseSELinuxContext("obj", msg.Data)
 	}
 
 	// Many different message types can have subj field so check them all.
@@ -347,6 +350,18 @@ func saddr(data map[string]string) error {
 		data[k] = v
 	}
 	return nil
+}
+
+func normalizeAUID(data map[string]string) {
+	auid, found := data["auid"]
+	if !found {
+		return
+	}
+
+	switch auid {
+	case "4294967295", "-1":
+		data["auid"] = "unset"
+	}
 }
 
 func hexDecode(key string, data map[string]string) error {
