@@ -3,3 +3,4 @@ type=EXECVE msg=audit(1492037291.036:59): argc=3 a0="grep" a1="--color=auto" a2=
 type=CWD msg=audit(1492037291.036:59):  cwd="/home/andrew_kroh"
 type=PATH msg=audit(1492037291.036:59): item=0 name="/usr/bin/grep" inode=2512 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:bin_t:s0 objtype=NORMAL
 type=PATH msg=audit(1492037291.036:59): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=19161168 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:ld_so_t:s0 objtype=NORMAL
+type=EOE msg=audit(1492037291.036:59)

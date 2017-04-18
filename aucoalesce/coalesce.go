@@ -1,3 +1,17 @@
+// Copyright 2017 Elasticsearch Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package aucoalesce
 
 import (
@@ -8,6 +22,9 @@ import (
 	"github.com/elastic/go-libaudit/auparse"
 )
 
+// CoalesceMessages combines the given messages into a single event. It assumes
+// that all the messages in the slice have the same timestamp and sequence
+// number. An error is returned is msgs is empty or nil.
 func CoalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, error) {
 	if len(msgs) == 0 {
 		return nil, errors.New("messages is empty")
@@ -20,6 +37,9 @@ func CoalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, err
 
 	for _, msg := range msgs {
 		data, _ := msg.Data()
+		if len(data) == 0 {
+			continue
+		}
 
 		switch msg.RecordType {
 		default:
@@ -33,6 +53,7 @@ func CoalesceMessages(msgs []*auparse.AuditMessage) (map[string]interface{}, err
 			delete(data, "items")
 			addRecord(msg, event)
 		case auparse.AUDIT_EOE:
+			// EOE (end-of-event) is just an empty sentinel message.
 		}
 	}
 

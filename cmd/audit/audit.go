@@ -145,8 +145,6 @@ func read() error {
 				Warn("failed to push event to reassembler")
 		}
 	}
-
-	return nil
 }
 
 type streamHandler struct{}

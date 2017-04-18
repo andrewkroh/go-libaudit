@@ -30,9 +30,8 @@ import (
 //go:generate perl mk_audit_arches.pl
 
 const (
-	typeToken            = "type="
-	msgToken             = "msg="
-	auditHeaderSeparator = ")"
+	typeToken = "type="
+	msgToken  = "msg="
 )
 
 var (
@@ -54,14 +53,25 @@ type AuditMessage struct {
 	error  error             // Error that occurred while parsing.
 }
 
+// Data returns the key-value pairs that are contained in the audit message.
+// This information is parsed from the raw message text the first time this
+// method is called, all future invocations return the stored result. A nil
+// map may be returned error is non-nil. A non-nil error is returned if there
+// was a failure parsing or enriching the data.
 func (m *AuditMessage) Data() (map[string]string, error) {
 	if m.data != nil || m.error != nil {
 		return m.data, m.error
 	}
 
+	if m.offset < 0 {
+		m.error = errors.New("message has no data content")
+		return nil, m.error
+	}
+
 	message, err := normalizeAuditMessage(m.RecordType, m.RawData[m.offset:])
 	if err != nil {
-		return nil, err
+		m.error = err
+		return nil, m.error
 	}
 
 	m.data = map[string]string{}
@@ -81,10 +91,10 @@ func (m *AuditMessage) Data() (map[string]string, error) {
 // present.
 func (m *AuditMessage) ToMapStr() map[string]string {
 	// Ensure event has been parsed.
-	m.Data()
+	data, err := m.Data()
 
-	out := make(map[string]string, len(m.data)+4)
-	for k, v := range m.data {
+	out := make(map[string]string, len(data)+4)
+	for k, v := range data {
 		out[k] = v
 	}
 
@@ -92,8 +102,8 @@ func (m *AuditMessage) ToMapStr() map[string]string {
 	out["@timestamp"] = m.Timestamp.UTC().String()
 	out["sequence"] = strconv.FormatUint(uint64(m.Sequence), 10)
 	out["raw_msg"] = m.RawData
-	if m.error != nil {
-		out["error"] = m.error.Error()
+	if err != nil {
+		out["error"] = err.Error()
 	}
 	return out
 }
