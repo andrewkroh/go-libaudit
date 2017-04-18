@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package aucoalesce provides functions to coalesce related audit messages into
+// a single event.
 package aucoalesce
 
 import (
