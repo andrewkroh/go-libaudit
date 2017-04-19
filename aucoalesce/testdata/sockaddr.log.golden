@@ -1,5 +1,6 @@
 {
   "@timestamp": "2017-04-12T19:57:42.361Z",
+  "category": "audit-rule",
   "cwd": "/",
   "path": [
     {
@@ -41,13 +42,13 @@
     "name": "sendmsg",
     "pid": "385",
     "ppid": "1",
-    "ses": "4294967295",
+    "result": "success",
+    "ses": "unset",
     "sgid": "0",
     "subj_domain": "systemd_logind_t",
     "subj_level": "s0",
     "subj_role": "system_r",
     "subj_user": "system_u",
-    "success": "yes",
     "suid": "0",
     "tty": "(none)",
     "uid": "0"

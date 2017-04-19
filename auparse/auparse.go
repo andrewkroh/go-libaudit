@@ -287,7 +287,8 @@ func enrichData(msg *AuditMessage) error {
 		if err := hexDecode("exe", msg.data); err != nil {
 			return err
 		}
-		normalizeAUID(msg.data)
+		normalizeUnsetID("auid", msg.data)
+		normalizeUnsetID("ses", msg.data)
 	case AUDIT_SOCKADDR:
 		if err := saddr(msg.data); err != nil {
 			return err
@@ -314,6 +315,9 @@ func enrichData(msg *AuditMessage) error {
 
 	// Many different message types can have subj field so check them all.
 	parseSELinuxContext("subj", msg.data)
+
+	// Normalize success/res to result.
+	result(msg.data)
 
 	return nil
 }
@@ -367,15 +371,15 @@ func saddr(data map[string]string) error {
 	return nil
 }
 
-func normalizeAUID(data map[string]string) {
-	auid, found := data["auid"]
+func normalizeUnsetID(key string, data map[string]string) {
+	id, found := data[key]
 	if !found {
 		return
 	}
 
-	switch auid {
+	switch id {
 	case "4294967295", "-1":
-		data["auid"] = "unset"
+		data[key] = "unset"
 	}
 }
 
@@ -475,5 +479,30 @@ func parseSELinuxContext(key string, data map[string]string) error {
 	for i, part := range contextParts {
 		data[key+keys[i]] = part
 	}
+	return nil
+}
+
+func result(data map[string]string) error {
+	// Syscall messages use "success". Other messages use "res".
+	result, found := data["success"]
+	if !found {
+		result, found = data["res"]
+		if !found {
+			return errors.New("success and res key not found")
+		}
+		delete(data, "res")
+	} else {
+		delete(data, "success")
+	}
+
+	result = strings.ToLower(result)
+	switch {
+	case result == "yes", strings.HasPrefix(result, "suc"):
+		result = "success"
+	default:
+		result = "fail"
+	}
+
+	data["result"] = result
 	return nil
 }
