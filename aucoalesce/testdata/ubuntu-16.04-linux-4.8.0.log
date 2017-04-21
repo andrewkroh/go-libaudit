@@ -1,1 +1,0 @@
-type=SERVICE_START msg=audit(1492625990.183:4083): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=rsyslog comm="systemd" exe="/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'

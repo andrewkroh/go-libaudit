@@ -20,82 +20,134 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	"strings"
 	"testing"
+
+	"path/filepath"
+	"sort"
 
 	"github.com/elastic/go-libaudit/auparse"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 var update = flag.Bool("update", false, "update .golden files")
 
 func TestCoalesceMessages(t *testing.T) {
-	files, err := filepath.Glob("testdata/*.log")
+	testFiles, err := filepath.Glob("testdata/*.yaml")
 	if err != nil {
-		t.Fatal("glob failed", err)
+		t.Fatal("glob", err)
 	}
 
-	for _, name := range files {
-		testCoalesce(t, name)
+	for _, file := range testFiles {
+		testCoalesceEvent(t, file)
 	}
 }
 
-func testCoalesce(t testing.TB, file string) {
-	msgs := readMessages(t, file)
+type testEvent struct {
+	name     string
+	messages []*auparse.AuditMessage
+}
 
-	event, err := CoalesceMessages(msgs)
-	if err != nil {
-		t.Fatal(err)
+func testCoalesceEvent(t *testing.T, file string) {
+	testEvents := readEventsFromYAML(t, file)
+
+	var events []*Event
+	for _, te := range testEvents {
+		event, err := CoalesceMessages(te.messages)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		events = append(events, event)
 	}
 
 	// Update golden files on -update.
 	if *update {
-		if err = writeGoldenFile(file, event); err != nil {
+		if err := writeGoldenFile(file, events); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	// Compare events to golden events.
-	goldenEvent, err := readGoldenFile(file + ".golden")
+	goldenEvents, err := readGoldenFile(file)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.EqualValues(t, goldenEvent, normalizeEvent(t, event), "file: %v", file)
+	// Compare events to golden events.
+	for i, observed := range events {
+		if i >= len(goldenEvents) {
+			t.Errorf("golden file has fewer events that there are test cases (run with -update): file=%v", file)
+			continue
+		}
+		expected := goldenEvents[i]
+		assert.EqualValues(t, expected, normalizeEvent(t, observed), "file=%v test_case=%v", file, testEvents[i].name)
+	}
 }
 
-func readMessages(t testing.TB, name string) []*auparse.AuditMessage {
-	f, err := os.Open(name)
+func readEventsFromYAML(t testing.TB, name string) []testEvent {
+	file, err := ioutil.ReadFile(name)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
 
-	var msgs []*auparse.AuditMessage
+	var data map[string]interface{}
+	if err := yaml.Unmarshal(file, &data); err != nil {
+		t.Fatal(err)
+	}
 
-	// Read logs and parse events.
-	s := bufio.NewScanner(bufio.NewReader(f))
-	for s.Scan() {
-		line := s.Text()
-		msg, err := auparse.ParseLogLine(line)
-		if err != nil {
-			t.Fatal("invalid message:", line)
+	tests, ok := data["tests"]
+	if !ok {
+		t.Fatal("failed to find 'tests' in yaml")
+	}
+
+	cases, ok := tests.(map[interface{}]interface{})
+	if !ok {
+		t.Fatalf("unexpected type %T for 'tests'", tests)
+	}
+
+	// Create test cases from YAML file.
+	var testEvents []testEvent
+	for name, messages := range cases {
+		var msgs []*auparse.AuditMessage
+
+		s := bufio.NewScanner(strings.NewReader(messages.(string)))
+		for s.Scan() {
+			line := s.Text()
+			msg, err := auparse.ParseLogLine(line)
+			if err != nil {
+				t.Fatal("invalid message:", line)
+			}
+
+			msgs = append(msgs, msg)
 		}
 
-		msgs = append(msgs, msg)
+		testEvents = append(testEvents, testEvent{
+			name:     name.(string),
+			messages: msgs,
+		})
 	}
 
-	return msgs
+	// Sort the test cases by their key to ensure ordering.
+	sort.Slice(testEvents, func(i, j int) bool {
+		return testEvents[i].name < testEvents[j].name
+	})
+
+	return testEvents
 }
 
-func writeGoldenFile(sourceName string, event *Event) error {
-	f, err := os.Create(sourceName + ".golden")
+func writeGoldenFile(name string, events []*Event) error {
+	if strings.HasSuffix(name, ".yaml") {
+		name = name[:len(name)-len(".yaml")]
+	}
+
+	f, err := os.Create(name + ".json.golden")
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	b, err := json.MarshalIndent(event, "", "  ")
+	b, err := json.MarshalIndent(events, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -107,13 +159,17 @@ func writeGoldenFile(sourceName string, event *Event) error {
 	return nil
 }
 
-func readGoldenFile(name string) (map[string]interface{}, error) {
-	data, err := ioutil.ReadFile(name)
+func readGoldenFile(name string) ([]map[string]interface{}, error) {
+	if strings.HasSuffix(name, ".yaml") {
+		name = name[:len(name)-len(".yaml")]
+	}
+
+	data, err := ioutil.ReadFile(name + ".json.golden")
 	if err != nil {
 		return nil, err
 	}
 
-	var out map[string]interface{}
+	var out []map[string]interface{}
 	if err := json.Unmarshal(data, &out); err != nil {
 		return nil, err
 	}
@@ -121,8 +177,8 @@ func readGoldenFile(name string) (map[string]interface{}, error) {
 	return out, nil
 }
 
-func normalizeEvent(t testing.TB, event *Event) map[string]interface{} {
-	b, err := json.Marshal(event)
+func normalizeEvent(t testing.TB, events *Event) map[string]interface{} {
+	b, err := json.Marshal(events)
 	if err != nil {
 		t.Fatal(err)
 	}

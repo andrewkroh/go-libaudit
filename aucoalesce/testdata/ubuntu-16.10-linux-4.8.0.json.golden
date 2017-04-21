@@ -1,0 +1,314 @@
+[
+  {
+    "@timestamp": "2017-04-21T00:32:22.981Z",
+    "sequence": 753,
+    "category": "anomoly",
+    "record_type": "anom_promiscuous",
+    "result": "success",
+    "session": "1",
+    "actor": {
+      "primary": "1001",
+      "secondary": "0",
+      "attrs": {
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0"
+      }
+    },
+    "thing": {
+      "primary": "ens4"
+    },
+    "action": "changed-promiscuous-mode-on-device",
+    "data": {
+      "a0": "4",
+      "a1": "8914",
+      "a2": "7ffdaff944b0",
+      "a3": "0",
+      "arch": "x86_64",
+      "auid": "1001",
+      "comm": "ifconfig",
+      "dev": "ens4",
+      "exe": "/sbin/ifconfig",
+      "exit": "0",
+      "gid": "0",
+      "old_prom": "256",
+      "pid": "1926",
+      "ppid": "1852",
+      "proctitle": "ifconfig",
+      "prom": "0",
+      "ses": "1",
+      "syscall": "ioctl",
+      "tty": "pts0",
+      "uid": "0"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T05:28:42.985Z",
+    "sequence": 8972,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "11",
+    "actor": {
+      "primary": "1001",
+      "secondary": "1001",
+      "attrs": {
+        "egid": "1002",
+        "euid": "1001",
+        "fsgid": "1002",
+        "fsuid": "1001",
+        "gid": "1002",
+        "sgid": "1002",
+        "suid": "1001"
+      }
+    },
+    "thing": {
+      "primary": "/bin/uname",
+      "secondary": "155",
+      "what": "file"
+    },
+    "action": "executed",
+    "how": "/bin/uname",
+    "key": "user_commands",
+    "data": {
+      "a0": "10812c8",
+      "a1": "1070208",
+      "a2": "1152008",
+      "a3": "59a",
+      "arch": "x86_64",
+      "argc": "2",
+      "cmdline": "\"uname\" \"-a\"",
+      "comm": "uname",
+      "cwd": "/home/andrew_kroh",
+      "exe": "/bin/uname",
+      "exit": "0",
+      "pid": "10043",
+      "ppid": "10027",
+      "proctitle": "uname",
+      "syscall": "execve",
+      "tty": "pts0"
+    },
+    "paths": [
+      {
+        "dev": "08:01",
+        "inode": "155",
+        "item": "0",
+        "mode": "0100755",
+        "name": "/bin/uname",
+        "nametype": "NORMAL",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      },
+      {
+        "dev": "08:01",
+        "inode": "1923",
+        "item": "1",
+        "mode": "0100755",
+        "name": "/lib64/ld-linux-x86-64.so.2",
+        "nametype": "NORMAL",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      }
+    ]
+  },
+  {
+    "@timestamp": "2017-04-20T00:35:20.473Z",
+    "sequence": 4678,
+    "category": "configuration",
+    "record_type": "netfilter_cfg",
+    "result": "success",
+    "session": "unset",
+    "actor": {
+      "primary": "unset",
+      "secondary": "0",
+      "attrs": {
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0"
+      }
+    },
+    "thing": {
+      "primary": "filter"
+    },
+    "action": "loaded-firewall-rule-to",
+    "data": {
+      "a0": "4",
+      "a1": "0",
+      "a2": "40",
+      "a3": "562bf7914100",
+      "arch": "x86_64",
+      "comm": "iptables",
+      "entries": "7",
+      "exe": "/sbin/xtables-multi",
+      "exit": "0",
+      "family": "2",
+      "pid": "9709",
+      "ppid": "9708",
+      "proctitle": "/sbin/iptables",
+      "syscall": "setsockopt",
+      "table": "filter",
+      "tty": "(none)"
+    }
+  },
+  {
+    "@timestamp": "2017-04-19T18:19:50.183Z",
+    "sequence": 4083,
+    "category": "system-services",
+    "record_type": "service_start",
+    "result": "success",
+    "session": "unset",
+    "actor": {
+      "primary": "unset",
+      "secondary": "0"
+    },
+    "thing": {},
+    "data": {
+      "comm": "systemd",
+      "exe": "/lib/systemd/systemd",
+      "pid": "1",
+      "unit": "rsyslog"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T05:17:01.295Z",
+    "sequence": 8784,
+    "category": "user-login",
+    "record_type": "user_end",
+    "result": "success",
+    "session": "10",
+    "actor": {
+      "primary": "0",
+      "secondary": "0"
+    },
+    "thing": {},
+    "data": {
+      "acct": "root",
+      "exe": "/usr/sbin/cron",
+      "op": "PAM:session_close",
+      "pid": "9945",
+      "terminal": "cron"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T05:28:41.165Z",
+    "sequence": 8955,
+    "category": "user-login",
+    "record_type": "user_start",
+    "result": "success",
+    "session": "11",
+    "actor": {
+      "primary": "1001",
+      "secondary": "0"
+    },
+    "thing": {},
+    "data": {
+      "acct": "andrew_kroh",
+      "addr": "72.83.230.100",
+      "exe": "/usr/sbin/sshd",
+      "hostname": "72.83.230.100",
+      "op": "PAM:session_open",
+      "pid": "9950",
+      "terminal": "ssh"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T05:28:40.441Z",
+    "sequence": 8832,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "unset",
+    "actor": {
+      "primary": "unset",
+      "secondary": "0",
+      "attrs": {
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0"
+      }
+    },
+    "thing": {},
+    "action": "accepted-connection-from",
+    "how": "/usr/sbin/sshd",
+    "key": "net",
+    "data": {
+      "a0": "3",
+      "a1": "7ffd0dc80040",
+      "a2": "7ffd0dc7ffd0",
+      "a3": "0",
+      "arch": "x86_64",
+      "comm": "sshd",
+      "exe": "/usr/sbin/sshd",
+      "exit": "5",
+      "pid": "1663",
+      "ppid": "1",
+      "proctitle": "(sshd)",
+      "syscall": "accept",
+      "tty": "(none)"
+    },
+    "socket": {
+      "addr": "72.83.230.100",
+      "address_family": "ipv4",
+      "port": "58140"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T05:38:27.096Z",
+    "sequence": 9004,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "fail",
+    "session": "unset",
+    "actor": {
+      "primary": "unset",
+      "secondary": "0",
+      "attrs": {
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0"
+      }
+    },
+    "thing": {},
+    "action": "connected-to",
+    "how": "google_ip_forwa",
+    "key": "net",
+    "data": {
+      "a0": "5",
+      "a1": "7ffc12ac3ab0",
+      "a2": "10",
+      "a3": "4",
+      "arch": "x86_64",
+      "comm": "google_ip_forwa",
+      "exe": "/usr/bin/python3.5",
+      "exit": "-115",
+      "pid": "1648",
+      "ppid": "1",
+      "proctitle": "(g_daemon)",
+      "syscall": "connect",
+      "tty": "(none)"
+    },
+    "socket": {
+      "addr": "169.254.169.254",
+      "address_family": "ipv4",
+      "port": "80"
+    }
+  }
+]
