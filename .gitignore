@@ -26,3 +26,7 @@
 # Cmds
 cmd/audit/audit
 cmd/auparse/auparse
+
+# Vendor
+vendor/github.com
+vendor/golang.org

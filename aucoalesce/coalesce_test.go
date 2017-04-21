@@ -88,7 +88,7 @@ func readMessages(t testing.TB, name string) []*auparse.AuditMessage {
 	return msgs
 }
 
-func writeGoldenFile(sourceName string, event map[string]interface{}) error {
+func writeGoldenFile(sourceName string, event *Event) error {
 	f, err := os.Create(sourceName + ".golden")
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func readGoldenFile(name string) (map[string]interface{}, error) {
 	return out, nil
 }
 
-func normalizeEvent(t testing.TB, event map[string]interface{}) map[string]interface{} {
+func normalizeEvent(t testing.TB, event *Event) map[string]interface{} {
 	b, err := json.Marshal(event)
 	if err != nil {
 		t.Fatal(err)

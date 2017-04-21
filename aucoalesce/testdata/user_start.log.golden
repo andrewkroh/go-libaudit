@@ -1,16 +1,20 @@
 {
   "@timestamp": "2017-04-19T03:17:01.754Z",
-  "auid": "0",
-  "category": "user-login",
-  "result": "success",
   "sequence": 489,
+  "category": "user-login",
+  "record_type": "user_start",
+  "result": "success",
   "session": "7",
-  "user_start": {
+  "actor": {
+    "primary": "0",
+    "secondary": "0"
+  },
+  "thing": {},
+  "data": {
     "acct": "root",
     "exe": "/usr/sbin/cron",
     "op": "PAM:session_open",
     "pid": "3235",
-    "terminal": "cron",
-    "uid": "0"
+    "terminal": "cron"
   }
 }

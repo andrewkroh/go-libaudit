@@ -1,0 +1,4 @@
+type=ANOM_PROMISCUOUS msg=audit(1492734742.981:753): dev=ens4 prom=0 old_prom=256 auid=1001 uid=0 gid=0 ses=1
+type=SYSCALL msg=audit(1492734742.981:753): arch=c000003e syscall=16 success=yes exit=0 a0=4 a1=8914 a2=7ffdaff944b0 a3=0 items=0 ppid=1852 pid=1926 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="ifconfig" exe="/sbin/ifconfig" key=(null)
+type=PROCTITLE msg=audit(1492734742.981:753): proctitle=6966636F6E66696700656E7334002D70726F6D697363
+type=EOE msg=audit(1492734742.981:753):

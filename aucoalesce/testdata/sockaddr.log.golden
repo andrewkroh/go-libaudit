@@ -1,8 +1,48 @@
 {
   "@timestamp": "2017-04-12T19:57:42.361Z",
+  "sequence": 1316151,
   "category": "audit-rule",
-  "cwd": "/",
-  "path": [
+  "record_type": "syscall",
+  "result": "success",
+  "session": "unset",
+  "actor": {
+    "primary": "unset",
+    "secondary": "0",
+    "attrs": {
+      "egid": "0",
+      "euid": "0",
+      "fsgid": "0",
+      "fsuid": "0",
+      "gid": "0",
+      "sgid": "0",
+      "suid": "0"
+    },
+    "subject": {
+      "domain": "systemd_logind_t",
+      "level": "s0",
+      "role": "system_r",
+      "user": "system_u"
+    }
+  },
+  "thing": {},
+  "action": "sent-to",
+  "how": "/usr/lib/systemd/systemd-logind",
+  "data": {
+    "a0": "14",
+    "a1": "7ffe911f2610",
+    "a2": "4000",
+    "a3": "ffffffffffffffa9",
+    "arch": "x86_64",
+    "comm": "systemd-logind",
+    "cwd": "/",
+    "exe": "/usr/lib/systemd/systemd-logind",
+    "exit": "10",
+    "pid": "385",
+    "ppid": "1",
+    "syscall": "sendmsg",
+    "tty": "(none)"
+  },
+  "paths": [
     {
       "dev": "00:13",
       "inode": "6504",
@@ -19,38 +59,8 @@
       "rdev": "00:00"
     }
   ],
-  "sequence": 1316151,
-  "sockaddr": {
+  "socket": {
     "address_family": "unix",
     "path": "/run/systemd/notify"
-  },
-  "syscall": {
-    "a0": "14",
-    "a1": "7ffe911f2610",
-    "a2": "4000",
-    "a3": "ffffffffffffffa9",
-    "arch": "x86_64",
-    "auid": "unset",
-    "comm": "systemd-logind",
-    "egid": "0",
-    "euid": "0",
-    "exe": "/usr/lib/systemd/systemd-logind",
-    "exit": "10",
-    "fsgid": "0",
-    "fsuid": "0",
-    "gid": "0",
-    "name": "sendmsg",
-    "pid": "385",
-    "ppid": "1",
-    "result": "success",
-    "ses": "unset",
-    "sgid": "0",
-    "subj_domain": "systemd_logind_t",
-    "subj_level": "s0",
-    "subj_role": "system_r",
-    "subj_user": "system_u",
-    "suid": "0",
-    "tty": "(none)",
-    "uid": "0"
   }
 }

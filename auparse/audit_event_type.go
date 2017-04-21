@@ -67,6 +67,10 @@ func (t AuditEventType) String() string {
 	return auditEventTypeNames[EventTypeUnknown]
 }
 
+func (t AuditEventType) MarshalText() (text []byte, err error) {
+	return []byte(t.String()), nil
+}
+
 func GetAuditEventType(t AuditMessageType) AuditEventType {
 	// Ported from: https://github.com/linux-audit/audit-userspace/blob/v2.7.5/auparse/normalize.c#L681
 	switch {

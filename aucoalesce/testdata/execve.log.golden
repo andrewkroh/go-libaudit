@@ -1,12 +1,56 @@
 {
   "@timestamp": "2017-04-12T22:48:11.036Z",
+  "sequence": 59,
   "category": "audit-rule",
-  "cwd": "/home/andrew_kroh",
-  "execve": {
-    "argc": "3",
-    "cmdline": "\"grep\" \"--color=auto\" \"mapping\""
+  "record_type": "syscall",
+  "result": "success",
+  "session": "802",
+  "actor": {
+    "primary": "1000",
+    "secondary": "1000",
+    "attrs": {
+      "egid": "1001",
+      "euid": "1000",
+      "fsgid": "1001",
+      "fsuid": "1000",
+      "gid": "1001",
+      "sgid": "1001",
+      "suid": "1000"
+    },
+    "subject": {
+      "category": "c0.c1023",
+      "domain": "unconfined_t",
+      "level": "s0-s0",
+      "role": "unconfined_r",
+      "user": "unconfined_u"
+    }
   },
-  "path": [
+  "thing": {
+    "primary": "/usr/bin/grep",
+    "secondary": "2512",
+    "what": "file"
+  },
+  "action": "executed",
+  "how": "/usr/bin/grep",
+  "key": "user_commands",
+  "data": {
+    "a0": "1522170",
+    "a1": "1506120",
+    "a2": "14faeb0",
+    "a3": "7ffcc4582df0",
+    "arch": "x86_64",
+    "argc": "3",
+    "cmdline": "\"grep\" \"--color=auto\" \"mapping\"",
+    "comm": "grep",
+    "cwd": "/home/andrew_kroh",
+    "exe": "/usr/bin/grep",
+    "exit": "0",
+    "pid": "13393",
+    "ppid": "12041",
+    "syscall": "execve",
+    "tty": "pts1"
+  },
+  "paths": [
     {
       "dev": "08:01",
       "inode": "2512",
@@ -37,37 +81,5 @@
       "ouid": "0",
       "rdev": "00:00"
     }
-  ],
-  "sequence": 59,
-  "syscall": {
-    "a0": "1522170",
-    "a1": "1506120",
-    "a2": "14faeb0",
-    "a3": "7ffcc4582df0",
-    "arch": "x86_64",
-    "auid": "1000",
-    "comm": "grep",
-    "egid": "1001",
-    "euid": "1000",
-    "exe": "/usr/bin/grep",
-    "exit": "0",
-    "fsgid": "1001",
-    "fsuid": "1000",
-    "gid": "1001",
-    "key": "user_commands",
-    "name": "execve",
-    "pid": "13393",
-    "ppid": "12041",
-    "result": "success",
-    "ses": "802",
-    "sgid": "1001",
-    "subj_category": "c0.c1023",
-    "subj_domain": "unconfined_t",
-    "subj_level": "s0-s0",
-    "subj_role": "unconfined_r",
-    "subj_user": "unconfined_u",
-    "suid": "1000",
-    "tty": "pts1",
-    "uid": "1000"
-  }
+  ]
 }

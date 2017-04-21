@@ -1,0 +1,47 @@
+{
+  "@timestamp": "2017-04-21T00:32:22.981Z",
+  "sequence": 753,
+  "category": "anomoly",
+  "record_type": "anom_promiscuous",
+  "result": "success",
+  "session": "1",
+  "actor": {
+    "primary": "1001",
+    "secondary": "0",
+    "attrs": {
+      "egid": "0",
+      "euid": "0",
+      "fsgid": "0",
+      "fsuid": "0",
+      "gid": "0",
+      "sgid": "0",
+      "suid": "0"
+    }
+  },
+  "thing": {
+    "primary": "ens4"
+  },
+  "action": "promiscuous-mode-on-device",
+  "data": {
+    "a0": "4",
+    "a1": "8914",
+    "a2": "7ffdaff944b0",
+    "a3": "0",
+    "arch": "x86_64",
+    "auid": "1001",
+    "comm": "ifconfig",
+    "dev": "ens4",
+    "exe": "/sbin/ifconfig",
+    "exit": "0",
+    "gid": "0",
+    "old_prom": "256",
+    "pid": "1926",
+    "ppid": "1852",
+    "proctitle": "ifconfig",
+    "prom": "0",
+    "ses": "1",
+    "syscall": "ioctl",
+    "tty": "pts0",
+    "uid": "0"
+  }
+}

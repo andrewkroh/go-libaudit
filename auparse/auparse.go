@@ -276,6 +276,18 @@ func trimQuotesAndSpace(v string) string {
 // Enrichment after KV parsing
 
 func enrichData(msg *AuditMessage) error {
+	normalizeUnsetID("auid", msg.data)
+	normalizeUnsetID("ses", msg.data)
+
+	// Many different message types can have subj field so check them all.
+	parseSELinuxContext("subj", msg.data)
+
+	// Normalize success/res to result.
+	result(msg.data)
+
+	// Normalize keys that are of the form key="key=user_command".
+	auditRuleKey(msg.data)
+
 	switch msg.RecordType {
 	case AUDIT_SYSCALL:
 		if err := arch(msg.data); err != nil {
@@ -287,8 +299,6 @@ func enrichData(msg *AuditMessage) error {
 		if err := hexDecode("exe", msg.data); err != nil {
 			return err
 		}
-		normalizeUnsetID("auid", msg.data)
-		normalizeUnsetID("ses", msg.data)
 	case AUDIT_SOCKADDR:
 		if err := saddr(msg.data); err != nil {
 			return err
@@ -312,12 +322,6 @@ func enrichData(msg *AuditMessage) error {
 	case AUDIT_PATH:
 		parseSELinuxContext("obj", msg.data)
 	}
-
-	// Many different message types can have subj field so check them all.
-	parseSELinuxContext("subj", msg.data)
-
-	// Normalize success/res to result.
-	result(msg.data)
 
 	return nil
 }
@@ -505,4 +509,18 @@ func result(data map[string]string) error {
 
 	data["result"] = result
 	return nil
+}
+
+func auditRuleKey(data map[string]string) {
+	value, found := data["key"]
+	if !found {
+		return
+	}
+
+	parts := strings.SplitN(value, "=", 2)
+	if len(parts) != 2 {
+		return
+	}
+
+	data["key"] = parts[1]
 }
