@@ -10,17 +10,20 @@
       "primary": "1001",
       "secondary": "0",
       "attrs": {
+        "auid": "1001",
         "egid": "0",
         "euid": "0",
         "fsgid": "0",
         "fsuid": "0",
         "gid": "0",
         "sgid": "0",
-        "suid": "0"
+        "suid": "0",
+        "uid": "0"
       }
     },
     "thing": {
-      "primary": "ens4"
+      "primary": "ens4",
+      "what": "network-device"
     },
     "action": "changed-promiscuous-mode-on-device",
     "data": {
@@ -47,6 +50,55 @@
     }
   },
   {
+    "@timestamp": "2017-04-20T23:57:50.795Z",
+    "sequence": 12517,
+    "category": "configuration",
+    "record_type": "config_change",
+    "result": "success",
+    "session": "67",
+    "actor": {
+      "primary": "1001",
+      "attrs": {
+        "auid": "1001"
+      }
+    },
+    "thing": {
+      "primary": "remove_rule",
+      "what": "audit-config"
+    },
+    "action": "changed-audit-configuration",
+    "key": "container-create",
+    "data": {
+      "list": "4",
+      "op": "remove_rule"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T03:01:04.836Z",
+    "sequence": 8068,
+    "category": "configuration",
+    "record_type": "config_change",
+    "result": "success",
+    "session": "6",
+    "actor": {
+      "primary": "1001",
+      "attrs": {
+        "auid": "1001"
+      }
+    },
+    "thing": {
+      "primary": "updated_rules",
+      "what": "audit-config"
+    },
+    "action": "changed-audit-configuration",
+    "key": "auth",
+    "data": {
+      "list": "4",
+      "op": "updated_rules",
+      "path": "/etc/gshadow"
+    }
+  },
+  {
     "@timestamp": "2017-04-21T05:28:42.985Z",
     "sequence": 8972,
     "category": "audit-rule",
@@ -57,13 +109,15 @@
       "primary": "1001",
       "secondary": "1001",
       "attrs": {
+        "auid": "1001",
         "egid": "1002",
         "euid": "1001",
         "fsgid": "1002",
         "fsuid": "1001",
         "gid": "1002",
         "sgid": "1002",
-        "suid": "1001"
+        "suid": "1001",
+        "uid": "1001"
       }
     },
     "thing": {
@@ -128,17 +182,20 @@
       "primary": "unset",
       "secondary": "0",
       "attrs": {
+        "auid": "unset",
         "egid": "0",
         "euid": "0",
         "fsgid": "0",
         "fsuid": "0",
         "gid": "0",
         "sgid": "0",
-        "suid": "0"
+        "suid": "0",
+        "uid": "0"
       }
     },
     "thing": {
-      "primary": "filter"
+      "primary": "filter",
+      "what": "firewall"
     },
     "action": "loaded-firewall-rule-to",
     "data": {
@@ -169,9 +226,17 @@
     "session": "unset",
     "actor": {
       "primary": "unset",
-      "secondary": "0"
+      "secondary": "0",
+      "attrs": {
+        "auid": "unset",
+        "uid": "0"
+      }
     },
-    "thing": {},
+    "thing": {
+      "primary": "rsyslog",
+      "what": "service"
+    },
+    "action": "started-service",
     "data": {
       "comm": "systemd",
       "exe": "/lib/systemd/systemd",
@@ -188,15 +253,84 @@
     "session": "10",
     "actor": {
       "primary": "0",
-      "secondary": "0"
+      "secondary": "0",
+      "attrs": {
+        "auid": "0",
+        "uid": "0"
+      }
     },
-    "thing": {},
+    "thing": {
+      "primary": "cron",
+      "what": "user-session"
+    },
+    "action": "ended-session",
     "data": {
       "acct": "root",
       "exe": "/usr/sbin/cron",
       "op": "PAM:session_close",
       "pid": "9945",
       "terminal": "cron"
+    }
+  },
+  {
+    "@timestamp": "2017-04-22T21:25:01.818Z",
+    "sequence": 19955,
+    "category": "user-login",
+    "record_type": "user_login",
+    "result": "fail",
+    "session": "unset",
+    "actor": {
+      "primary": "(invalid user)",
+      "secondary": "0",
+      "attrs": {
+        "auid": "unset",
+        "uid": "0"
+      }
+    },
+    "thing": {
+      "primary": "sshd",
+      "what": "user-session"
+    },
+    "action": "logged-in",
+    "how": "sshd",
+    "data": {
+      "acct": "(invalid user)",
+      "addr": "179.38.151.221",
+      "exe": "/usr/sbin/sshd",
+      "op": "login",
+      "pid": "12635",
+      "terminal": "sshd"
+    }
+  },
+  {
+    "@timestamp": "2017-04-21T21:39:57.778Z",
+    "sequence": 12651,
+    "category": "user-login",
+    "record_type": "user_login",
+    "result": "success",
+    "session": "36",
+    "actor": {
+      "primary": "1001",
+      "secondary": "0",
+      "attrs": {
+        "auid": "1001",
+        "uid": "0"
+      }
+    },
+    "thing": {
+      "primary": "/dev/pts/1",
+      "what": "user-session"
+    },
+    "action": "logged-in",
+    "how": "/dev/pts/1",
+    "data": {
+      "addr": "72.83.230.100",
+      "exe": "/usr/sbin/sshd",
+      "hostname": "72.83.230.100",
+      "id": "1001",
+      "op": "login",
+      "pid": "11396",
+      "terminal": "/dev/pts/1"
     }
   },
   {
@@ -208,9 +342,17 @@
     "session": "11",
     "actor": {
       "primary": "1001",
-      "secondary": "0"
+      "secondary": "0",
+      "attrs": {
+        "auid": "1001",
+        "uid": "0"
+      }
     },
-    "thing": {},
+    "thing": {
+      "primary": "ssh",
+      "what": "user-session"
+    },
+    "action": "started-session",
     "data": {
       "acct": "andrew_kroh",
       "addr": "72.83.230.100",
@@ -232,16 +374,22 @@
       "primary": "unset",
       "secondary": "0",
       "attrs": {
+        "auid": "unset",
         "egid": "0",
         "euid": "0",
         "fsgid": "0",
         "fsuid": "0",
         "gid": "0",
         "sgid": "0",
-        "suid": "0"
+        "suid": "0",
+        "uid": "0"
       }
     },
-    "thing": {},
+    "thing": {
+      "primary": "72.83.230.100",
+      "secondary": "58140",
+      "what": "socket"
+    },
     "action": "accepted-connection-from",
     "how": "/usr/sbin/sshd",
     "key": "net",
@@ -267,6 +415,50 @@
     }
   },
   {
+    "@timestamp": "2017-04-21T14:09:35.673Z",
+    "sequence": 11516,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "unset",
+    "actor": {
+      "primary": "unset",
+      "secondary": "112",
+      "attrs": {
+        "auid": "unset",
+        "egid": "116",
+        "euid": "112",
+        "fsgid": "116",
+        "fsuid": "112",
+        "gid": "116",
+        "sgid": "116",
+        "suid": "112",
+        "uid": "112"
+      }
+    },
+    "thing": {
+      "what": "system"
+    },
+    "action": "changed-system-time",
+    "how": "/usr/sbin/ntpd",
+    "key": "time-change",
+    "data": {
+      "a0": "5614c63c1160",
+      "a1": "2001",
+      "a2": "5614c63c1160",
+      "a3": "0",
+      "arch": "x86_64",
+      "comm": "ntpd",
+      "exe": "/usr/sbin/ntpd",
+      "exit": "0",
+      "pid": "1596",
+      "ppid": "1",
+      "proctitle": "/usr/sbin/ntpd",
+      "syscall": "adjtimex",
+      "tty": "(none)"
+    }
+  },
+  {
     "@timestamp": "2017-04-21T05:38:27.096Z",
     "sequence": 9004,
     "category": "audit-rule",
@@ -277,16 +469,22 @@
       "primary": "unset",
       "secondary": "0",
       "attrs": {
+        "auid": "unset",
         "egid": "0",
         "euid": "0",
         "fsgid": "0",
         "fsuid": "0",
         "gid": "0",
         "sgid": "0",
-        "suid": "0"
+        "suid": "0",
+        "uid": "0"
       }
     },
-    "thing": {},
+    "thing": {
+      "primary": "169.254.169.254",
+      "secondary": "80",
+      "what": "socket"
+    },
     "action": "connected-to",
     "how": "google_ip_forwa",
     "key": "net",

@@ -40,7 +40,9 @@ func TestCoalesceMessages(t *testing.T) {
 	}
 
 	for _, file := range testFiles {
-		testCoalesceEvent(t, file)
+		t.Run(file, func(t *testing.T) {
+			testCoalesceEvent(t, file)
+		})
 	}
 }
 
@@ -81,7 +83,16 @@ func testCoalesceEvent(t *testing.T, file string) {
 			continue
 		}
 		expected := goldenEvents[i]
-		assert.EqualValues(t, expected, normalizeEvent(t, observed), "file=%v test_case=%v", file, testEvents[i].name)
+
+		t.Run(testEvents[i].name, func(t *testing.T) {
+			if len(observed.Warnings) > 0 {
+				for _, err := range observed.Warnings {
+					assert.NoError(t, err, "file=%v test_case=%v", file, testEvents[i].name)
+				}
+			}
+
+			assert.EqualValues(t, expected, normalizeEvent(t, observed), "file=%v test_case=%v", file, testEvents[i].name)
+		})
 	}
 }
 

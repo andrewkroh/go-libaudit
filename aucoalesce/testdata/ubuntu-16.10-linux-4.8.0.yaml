@@ -41,3 +41,21 @@ tests:
 
   SERVICE_START: |
     type=SERVICE_START msg=audit(1492625990.183:4083): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=rsyslog comm="systemd" exe="/lib/systemd/systemd" hostname=? addr=? terminal=? res=success
+
+  changed-system-time: |
+    type=SYSCALL msg=audit(1492783775.673:11516): arch=c000003e syscall=159 success=yes exit=0 a0=5614c63c1160 a1=2001 a2=5614c63c1160 a3=0 items=0 ppid=1 pid=1596 auid=4294967295 uid=112 gid=116 euid=112 suid=112 fsuid=112 egid=116 sgid=116 fsgid=116 tty=(none) ses=4294967295 comm="ntpd" exe="/usr/sbin/ntpd" key="key=time-change"
+    type=PROCTITLE msg=audit(1492783775.673:11516): proctitle=2F7573722F7362696E2F6E747064002D70002F7661722F72756E2F6E7470642E706964002D67002D63002F7661722F6C69622F6E74702F6E74702E636F6E662E64686370002D75003131323A313136
+    type=EOE msg=audit(1492783775.673:11516):
+
+  CONFIG_CHANGE update rules: |
+    type=CONFIG_CHANGE msg=audit(1492743664.836:8068): auid=1001 ses=6 op="updated_rules" path="/etc/gshadow" key="auth" list=4 res=1
+
+  CONFIG_CHANGE remove rule: |
+    type=CONFIG_CHANGE msg=audit(1492732670.795:12517): auid=1001 ses=67 op="remove_rule" key="key=container-create" list=4 res=1
+
+  USER_LOGIN failed ssh: |
+    type=USER_LOGIN msg=audit(1492896301.818:19955): pid=12635 uid=0 auid=4294967295 ses=4294967295 msg='op=login acct=28696E76616C6964207573657229 exe="/usr/sbin/sshd" hostname=? addr=179.38.151.221 terminal=sshd res=failed'
+
+  USER_LOGIN success: |
+    type=USER_LOGIN msg=audit(1492810797.778:12651): pid=11396 uid=0 auid=1001 ses=36 msg='op=login id=1001 exe="/usr/sbin/sshd" hostname=72.83.230.100 addr=72.83.230.100 terminal=/dev/pts/1 res=success'
+

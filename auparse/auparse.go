@@ -321,6 +321,9 @@ func enrichData(msg *AuditMessage) error {
 		}
 	case AUDIT_PATH:
 		parseSELinuxContext("obj", msg.data)
+	case AUDIT_USER_LOGIN:
+		// acct only exists in failed logins.
+		hexDecode("acct", msg.data)
 	}
 
 	return nil
@@ -501,7 +504,7 @@ func result(data map[string]string) error {
 
 	result = strings.ToLower(result)
 	switch {
-	case result == "yes", strings.HasPrefix(result, "suc"):
+	case result == "yes", result == "1", strings.HasPrefix(result, "suc"):
 		result = "success"
 	default:
 		result = "fail"

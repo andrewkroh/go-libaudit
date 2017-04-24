@@ -17,7 +17,6 @@
 package aucoalesce
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -27,7 +26,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// The OS package does not have a constant for block devices.
+// modeBlockDevice is the file mode bit representing block devices. This OS
+// package does not have a constant defined for this.
 const modeBlockDevice = 060000
 
 type Event struct {
@@ -35,7 +35,7 @@ type Event struct {
 	Sequence  uint32                   `json:"sequence"`
 	Category  auparse.AuditEventType   `json:"category"`
 	Type      auparse.AuditMessageType `json:"record_type"`
-	Result    string                   `json:"result"`
+	Result    string                   `json:"result,omitempty"`
 	Session   string                   `json:"session"`
 	Actor     Actor                    `json:"actor"`
 	Thing     Thing                    `json:"thing,omitempty"`
@@ -47,7 +47,7 @@ type Event struct {
 	Paths  []map[string]string `json:"paths,omitempty"`
 	Socket map[string]string   `json:"socket,omitempty"`
 
-	Errors []error `json:"errors,omitempty"`
+	Warnings []error `json:"-"`
 }
 
 type Actor struct {
@@ -106,7 +106,6 @@ func CoalesceMessages(msgs []*auparse.AuditMessage) (*Event, error) {
 		applyNormalization(event)
 	}
 
-	fmt.Println(event.Errors)
 	return event, err
 }
 
@@ -178,7 +177,7 @@ func newEvent(msg *auparse.AuditMessage, syscall *auparse.AuditMessage) *Event {
 
 	data, err := msg.Data()
 	if err != nil {
-		event.Errors = append(event.Errors, err)
+		event.Warnings = append(event.Warnings, err)
 		return event
 	}
 
@@ -194,12 +193,12 @@ func newEvent(msg *auparse.AuditMessage, syscall *auparse.AuditMessage) *Event {
 
 	if auid, found := data["auid"]; found {
 		event.Actor.Primary = auid
-		delete(data, "auid")
+		//delete(data, "auid")
 	}
 
 	if uid, found := data["uid"]; found {
 		event.Actor.Secondary = uid
-		delete(data, "uid")
+		//delete(data, "uid")
 	}
 
 	if key, found := data["key"]; found {
@@ -241,7 +240,7 @@ func addActorSubject(key, value string, event *Event) error {
 func addPathRecord(path *auparse.AuditMessage, event *Event) {
 	data, err := path.Data()
 	if err != nil {
-		event.Errors = append(event.Errors, err)
+		event.Warnings = append(event.Warnings, err)
 		return
 	}
 
@@ -251,13 +250,13 @@ func addPathRecord(path *auparse.AuditMessage, event *Event) {
 func addFieldsToEvent(msg *auparse.AuditMessage, event *Event) {
 	data, err := msg.Data()
 	if err != nil {
-		event.Errors = append(event.Errors, err)
+		event.Warnings = append(event.Warnings, err)
 		return
 	}
 
 	for k, v := range data {
 		if _, found := event.Data[k]; found {
-			event.Errors = append(event.Errors, errors.Errorf("duplicate key (%v) from %v message", k, msg.RecordType))
+			event.Warnings = append(event.Warnings, errors.Errorf("duplicate key (%v) from %v message", k, msg.RecordType))
 			continue
 		}
 		event.Data[k] = v
@@ -267,7 +266,11 @@ func addFieldsToEvent(msg *auparse.AuditMessage, event *Event) {
 func syscallSetHow(event *Event) {
 	exe, found := event.Data["exe"]
 	if !found {
-		return
+		// Fallback to comm.
+		exe, found = event.Data["comm"]
+		if !found {
+			return
+		}
 	}
 	event.How = exe
 
@@ -293,14 +296,12 @@ func applyNormalization(event *Event) {
 	if event.Type == auparse.AUDIT_SYSCALL {
 		syscall := event.Data["syscall"]
 		norm = syscallNorms[syscall]
-		fmt.Println("syscall name:", syscall, "norm:", norm)
 		syscallSetHow(event)
 	} else {
 		norm = recordTypeNorms[event.Type.String()]
 	}
-
 	if norm == nil {
-		fmt.Println("norm not found")
+		event.Warnings = append(event.Warnings, errors.New("no normalization found for event"))
 		return
 	}
 
@@ -310,22 +311,129 @@ func applyNormalization(event *Event) {
 	case "file", "filesystem":
 		event.Thing.What = norm.Object.What
 		setFileObject(event, norm.Object.PathIndex)
+	case "socket":
+		event.Thing.What = norm.Object.What
+		setSocketObject(event)
+	default:
+		event.Thing.What = norm.Object.What
 	}
 
-	if norm.Object.PrimaryFieldName != "" {
-		if err := setObjectPrimary(norm.Object.PrimaryFieldName, event); err != nil {
-			fmt.Println("error:", err)
+	if len(norm.Subject.PrimaryFieldName.Values) > 0 {
+		var err error
+		for _, subjKey := range norm.Subject.PrimaryFieldName.Values {
+			if err = setSubjectPrimary(subjKey, event); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			event.Warnings = append(event.Warnings, errors.Errorf("failed to set subject primary using keys=%v because they were not found", norm.Subject.PrimaryFieldName.Values))
+		}
+	}
+
+	if len(norm.Subject.SecondaryFieldName.Values) > 0 {
+		var err error
+		for _, subjKey := range norm.Subject.SecondaryFieldName.Values {
+			if err = setSubjectSecondary(subjKey, event); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			event.Warnings = append(event.Warnings, errors.Errorf("failed to set subject secondary using keys=%v because they were not found", norm.Subject.SecondaryFieldName.Values))
+		}
+	}
+
+	if len(norm.Object.PrimaryFieldName.Values) > 0 {
+		var err error
+		for _, objKey := range norm.Object.PrimaryFieldName.Values {
+			if err = setObjectPrimary(objKey, event); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			event.Warnings = append(event.Warnings, errors.Errorf("failed to set object primary using keys=%v because they were not found", norm.Object.PrimaryFieldName.Values))
+		}
+	}
+
+	if len(norm.Object.SecondaryFieldName.Values) > 0 {
+		var err error
+		for _, objKey := range norm.Object.SecondaryFieldName.Values {
+			if err = setObjectSecondary(objKey, event); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			event.Warnings = append(event.Warnings, errors.Errorf("failed to set object secondary using keys=%v because they were not found", norm.Object.SecondaryFieldName.Values))
+		}
+	}
+
+	if len(norm.How.Values) > 0 {
+		var err error
+		for _, howKey := range norm.How.Values {
+			if err = setHow(howKey, event); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			event.Warnings = append(event.Warnings, errors.Errorf("failed to set how using keys=%v because they were not found", norm.How.Values))
 		}
 	}
 }
 
-func setObjectPrimary(key string, event *Event) error {
+func getValue(key string, event *Event) (string, bool) {
 	value, found := event.Data[key]
+	if !found {
+		value, found = event.Actor.Attributes[key]
+	}
+	return value, found
+}
+
+func setHow(key string, event *Event) error {
+	value, found := getValue(key, event)
+	if !found {
+		return errors.Errorf("failed to set how value: key '%v' not found", key)
+	}
+
+	event.How = value
+	return nil
+}
+
+func setSubjectPrimary(key string, event *Event) error {
+	value, found := getValue(key, event)
+	if !found {
+		return errors.Errorf("failed to set subject primary value: key '%v' not found", key)
+	}
+
+	event.Actor.Primary = value
+	return nil
+}
+
+func setSubjectSecondary(key string, event *Event) error {
+	value, found := getValue(key, event)
+	if !found {
+		return errors.Errorf("failed to set subject secondary value: key '%v' not found", key)
+	}
+
+	event.Actor.Secondary = value
+	return nil
+}
+
+func setObjectPrimary(key string, event *Event) error {
+	value, found := getValue(key, event)
 	if !found {
 		return errors.Errorf("failed to set object primary value: key '%v' not found", key)
 	}
 
 	event.Thing.Primary = value
+	return nil
+}
+
+func setObjectSecondary(key string, event *Event) error {
+	value, found := getValue(key, event)
+	if !found {
+		return errors.Errorf("failed to set object secondary value: key '%v' not found", key)
+	}
+
+	event.Thing.Secondary = value
 	return nil
 }
 
@@ -375,5 +483,23 @@ func setFileObject(event *Event, pathIndex int) error {
 		}
 	}
 
+	return nil
+}
+
+func setSocketObject(event *Event) error {
+	value, found := event.Socket["addr"]
+	if found {
+		event.Thing.Primary = value
+	} else {
+		value, found = event.Socket["path"]
+		if found {
+			event.Thing.Primary = value
+		}
+	}
+
+	value, found = event.Socket["port"]
+	if found {
+		event.Thing.Secondary = value
+	}
 	return nil
 }
