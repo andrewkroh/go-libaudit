@@ -66,8 +66,8 @@ type Normalization struct {
 	Action      string         `yaml:"action"`
 	Object      ObjectMapping  `yaml:"object"`
 	How         Strings        `yaml:"how"`
-	RecordTypes []string       `yaml:"record_types"`
-	Syscalls    []string       `yaml:"syscalls"`
+	RecordTypes Strings        `yaml:"record_types"`
+	Syscalls    Strings        `yaml:"syscalls"`
 }
 
 type SubjectMapping struct {
@@ -97,13 +97,13 @@ func LoadNormalizationConfig(b []byte) (syscalls map[string]*Normalization, reco
 
 	for i := range c.Normalizations {
 		norm := c.Normalizations[i]
-		for _, syscall := range norm.Syscalls {
+		for _, syscall := range norm.Syscalls.Values {
 			if _, found := syscalls[syscall]; found {
 				return nil, nil, fmt.Errorf("duplication mappings for sycall %v", syscall)
 			}
 			syscalls[syscall] = &norm
 		}
-		for _, recordType := range norm.RecordTypes {
+		for _, recordType := range norm.RecordTypes.Values {
 			if _, found := recordTypes[recordType]; found {
 				return nil, nil, fmt.Errorf("duplication mappings for record_type %v", recordType)
 			}

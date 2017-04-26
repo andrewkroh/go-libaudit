@@ -17,3 +17,33 @@ tests:
     type=PATH msg=audit(1493125524.089:126): item=3 name="/etc/audit/rules.d/audit.rules~" inode=271112 dev=08:01 mode=0100640 ouid=0 ogid=0 rdev=00:00 nametype=CREATE
     type=PROCTITLE msg=audit(1493125524.089:126): proctitle=76696D002F6574632F61756469742F72756C65732E642F61756469742E72756C6573
     type=EOE msg=audit(1493125524.089:126):
+
+  USER_CMD: |
+    type=USER_CMD msg=audit(1493162652.304:18662): pid=9729 uid=1001 auid=1001 ses=1 msg='cwd="/home/andrew_kroh" cmd="su" terminal=pts/0 res=success'
+
+  USER_ACCT: |
+    type=USER_ACCT msg=audit(1493219821.115:21415): pid=10665 uid=0 auid=4294967295 ses=4294967295 msg='op=PAM:accounting acct="root" exe="/usr/sbin/cron" hostname=? addr=? terminal=cron res=success'
+
+  USER_AUTH: |
+    type=USER_AUTH msg=audit(1493162652.324:18669): pid=9730 uid=0 auid=1001 ses=1 msg='op=PAM:authentication acct="root" exe="/bin/su" hostname=? addr=? terminal=/dev/pts/0 res=success'
+
+  USER_START: |
+    type=USER_START msg=audit(1493219821.115:21419): pid=10665 uid=0 auid=0 ses=39 msg='op=PAM:session_open acct="root" exe="/usr/sbin/cron" hostname=? addr=? terminal=cron res=success'
+
+  CRED_ACQ: |
+    type=CRED_ACQ msg=audit(1493219821.115:21416): pid=10665 uid=0 auid=4294967295 ses=4294967295 msg='op=PAM:setcred acct="root" exe="/usr/sbin/cron" hostname=? addr=? terminal=cron res=success'
+
+  USER_ERR: |
+    type=USER_ERR msg=audit(1493219819.739:21413): pid=10663 uid=0 auid=4294967295 ses=4294967295 msg='op=PAM:bad_ident acct="?" exe="/usr/sbin/sshd" hostname=185.56.82.22 addr=185.56.82.22 terminal=ssh res=failed'
+
+  USER_END: |
+    type=USER_END msg=audit(1493216221.105:21265): pid=10631 uid=0 auid=0 ses=38 msg='op=PAM:session_close acct="root" exe="/usr/sbin/cron" hostname=? addr=? terminal=cron res=success'
+
+  CRED_DISP: |
+    type=CRED_DISP msg=audit(1493216221.101:21264): pid=10631 uid=0 auid=0 ses=38 msg='op=PAM:setcred acct="root" exe="/usr/sbin/cron" hostname=? addr=? terminal=cron res=success'
+
+  USER_LOGIN: |
+    type=USER_LOGIN msg=audit(1493216050.975:21203): pid=10617 uid=0 auid=4294967295 ses=4294967295 msg='op=login acct=28696E76616C6964207573657229 exe="/usr/sbin/sshd" hostname=? addr=31.207.47.36 terminal=sshd res=failed'
+
+  USER_CHAUTHTOK failed: |
+    type=USER_CHAUTHTOK msg=audit(1493224850.928:21878): pid=10829 uid=1002 auid=1001 ses=41 msg='op=PAM:chauthtok acct="akroh" exe="/usr/bin/passwd" hostname=? addr=? terminal=pts/0 res=failed'

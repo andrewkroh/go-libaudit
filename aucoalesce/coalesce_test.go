@@ -51,17 +51,31 @@ type testEvent struct {
 	messages []*auparse.AuditMessage
 }
 
+type testEventOutput struct {
+	TestName string   `json:"test_name"`
+	Event    *Event   `json:"event"`
+	Warnings []string `json:"warnings,omitempty"`
+}
+
+func newTestEventOutput(testName string, event *Event) testEventOutput {
+	var errs []string
+	for _, err := range event.Warnings {
+		errs = append(errs, err.Error())
+	}
+	return testEventOutput{testName, event, errs}
+}
+
 func testCoalesceEvent(t *testing.T, file string) {
 	testEvents := readEventsFromYAML(t, file)
 
-	var events []*Event
+	var events []testEventOutput
 	for _, te := range testEvents {
 		event, err := CoalesceMessages(te.messages)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		events = append(events, event)
+		events = append(events, newTestEventOutput(te.name, event))
 	}
 
 	// Update golden files on -update.
@@ -85,12 +99,6 @@ func testCoalesceEvent(t *testing.T, file string) {
 		expected := goldenEvents[i]
 
 		t.Run(testEvents[i].name, func(t *testing.T) {
-			if len(observed.Warnings) > 0 {
-				for _, err := range observed.Warnings {
-					assert.NoError(t, err, "file=%v test_case=%v", file, testEvents[i].name)
-				}
-			}
-
 			assert.EqualValues(t, expected, normalizeEvent(t, observed), "file=%v test_case=%v", file, testEvents[i].name)
 		})
 	}
@@ -147,7 +155,7 @@ func readEventsFromYAML(t testing.TB, name string) []testEvent {
 	return testEvents
 }
 
-func writeGoldenFile(name string, events []*Event) error {
+func writeGoldenFile(name string, events []testEventOutput) error {
 	if strings.HasSuffix(name, ".yaml") {
 		name = name[:len(name)-len(".yaml")]
 	}
@@ -188,8 +196,8 @@ func readGoldenFile(name string) ([]map[string]interface{}, error) {
 	return out, nil
 }
 
-func normalizeEvent(t testing.TB, events *Event) map[string]interface{} {
-	b, err := json.Marshal(events)
+func normalizeEvent(t testing.TB, event testEventOutput) map[string]interface{} {
+	b, err := json.Marshal(event)
 	if err != nil {
 		t.Fatal(err)
 	}

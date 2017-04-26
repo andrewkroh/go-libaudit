@@ -54,13 +54,13 @@ type Actor struct {
 	Primary    string            `json:"primary,omitempty"`
 	Secondary  string            `json:"secondary,omitempty"`
 	Attributes map[string]string `json:"attrs,omitempty"`   // Other identify data like euid, suid, fsuid, gid, egid, sgid, fsgid.
-	SELinux map[string]string    `json:"selinux,omitempty"` // SELinux labels.
+	SELinux    map[string]string `json:"selinux,omitempty"` // SELinux labels.
 }
 
 type Thing struct {
-	Primary   string `json:"primary,omitempty"`
-	Secondary string `json:"secondary,omitempty"`
-	What      string `json:"what,omitempty"`
+	Primary   string            `json:"primary,omitempty"`
+	Secondary string            `json:"secondary,omitempty"`
+	What      string            `json:"what,omitempty"`
 	SELinux   map[string]string `json:"selinux,omitempty"`
 }
 
