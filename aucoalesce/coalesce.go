@@ -54,13 +54,14 @@ type Actor struct {
 	Primary    string            `json:"primary,omitempty"`
 	Secondary  string            `json:"secondary,omitempty"`
 	Attributes map[string]string `json:"attrs,omitempty"`   // Other identify data like euid, suid, fsuid, gid, egid, sgid, fsgid.
-	Subject    map[string]string `json:"subject,omitempty"` // SELinux labels.
+	SELinux map[string]string    `json:"selinux,omitempty"` // SELinux labels.
 }
 
 type Thing struct {
 	Primary   string `json:"primary,omitempty"`
 	Secondary string `json:"secondary,omitempty"`
 	What      string `json:"what,omitempty"`
+	SELinux   map[string]string `json:"selinux,omitempty"`
 }
 
 // ResolveIDs translates all uid and gid values to their associated names.
@@ -71,14 +72,27 @@ func ResolveIDs(event *Event) {
 	if v := userLookup.LookupUID(event.Actor.Secondary); v != "" {
 		event.Actor.Secondary = v
 	}
-	for key, id := range event.Data {
+	for key, id := range event.Actor.Attributes {
 		if strings.HasSuffix(key, "uid") {
 			if v := userLookup.LookupUID(id); v != "" {
-				event.Data[key] = v
+				event.Actor.Attributes[key] = v
 			}
 		} else if strings.HasSuffix(key, "gid") {
 			if v := groupLookup.LookupGID(id); v != "" {
-				event.Data[key] = v
+				event.Actor.Attributes[key] = v
+			}
+		}
+	}
+	for _, path := range event.Paths {
+		for key, id := range path {
+			if strings.HasSuffix(key, "uid") {
+				if v := userLookup.LookupUID(id); v != "" {
+					path[key] = v
+				}
+			} else if strings.HasSuffix(key, "gid") {
+				if v := groupLookup.LookupGID(id); v != "" {
+					path[key] = v
+				}
 			}
 		}
 	}
@@ -184,6 +198,8 @@ func newEvent(msg *auparse.AuditMessage, syscall *auparse.AuditMessage) *Event {
 	if result, found := data["result"]; found {
 		event.Result = result
 		delete(data, "result")
+	} else {
+		event.Result = "unknown"
 	}
 
 	if ses, found := data["ses"]; found {
@@ -210,7 +226,7 @@ func newEvent(msg *auparse.AuditMessage, syscall *auparse.AuditMessage) *Event {
 		if strings.HasSuffix(k, "uid") || strings.HasSuffix(k, "gid") {
 			addActorAttribute(k, v, event)
 		} else if strings.HasPrefix(k, "subj_") {
-			addActorSubject(k[5:], v, event)
+			addActorSELinux(k[5:], v, event)
 		} else {
 			event.Data[k] = v
 		}
@@ -228,12 +244,21 @@ func addActorAttribute(key, value string, event *Event) error {
 	return nil
 }
 
-func addActorSubject(key, value string, event *Event) error {
-	if event.Actor.Subject == nil {
-		event.Actor.Subject = map[string]string{}
+func addActorSELinux(key, value string, event *Event) error {
+	if event.Actor.SELinux == nil {
+		event.Actor.SELinux = map[string]string{}
 	}
 
-	event.Actor.Subject[key] = value
+	event.Actor.SELinux[key] = value
+	return nil
+}
+
+func addThingSELinux(key, value string, event *Event) error {
+	if event.Thing.SELinux == nil {
+		event.Thing.SELinux = map[string]string{}
+	}
+
+	event.Thing.SELinux[key] = value
 	return nil
 }
 
@@ -263,7 +288,7 @@ func addFieldsToEvent(msg *auparse.AuditMessage, event *Event) {
 	}
 }
 
-func syscallSetHow(event *Event) {
+func setHowDefaults(event *Event) {
 	exe, found := event.Data["exe"]
 	if !found {
 		// Fallback to comm.
@@ -292,11 +317,12 @@ func syscallSetHow(event *Event) {
 }
 
 func applyNormalization(event *Event) {
+	setHowDefaults(event)
+
 	var norm *Normalization
 	if event.Type == auparse.AUDIT_SYSCALL {
 		syscall := event.Data["syscall"]
 		norm = syscallNorms[syscall]
-		syscallSetHow(event)
 	} else {
 		norm = recordTypeNorms[event.Type.String()]
 	}
@@ -437,14 +463,23 @@ func setObjectSecondary(key string, event *Event) error {
 	return nil
 }
 
-func setFileObject(event *Event, pathIndex int) error {
+func setFileObject(event *Event, pathIndexHint int) error {
 	if len(event.Paths) == 0 {
 		return errors.New("path message not found")
 	}
 
-	path := event.Paths[0]
-	if len(event.Paths) > pathIndex {
-		path = event.Paths[pathIndex]
+	var pathIndex int
+	if len(event.Paths) > pathIndexHint {
+		pathIndex = pathIndexHint
+	}
+
+	path := event.Paths[pathIndex]
+	for _, p := range event.Paths[pathIndex:] {
+		// Skip over PARENT and UNKNOWN types in case the path index was wrong.
+		if nametype := p["nametype"]; nametype != "PARENT" && nametype != "UNKNOWN" {
+			path = p
+			break
+		}
 	}
 
 	value, found := path["name"]
@@ -480,6 +515,12 @@ func setFileObject(event *Event, pathIndex int) error {
 			event.Thing.What = "symlink"
 		case m&os.ModeSocket != 0:
 			event.Thing.What = "socket"
+		}
+	}
+
+	for k, v := range path {
+		if strings.HasPrefix(k, "obj_") {
+			addThingSELinux(k[4:], v, event)
 		}
 	}
 

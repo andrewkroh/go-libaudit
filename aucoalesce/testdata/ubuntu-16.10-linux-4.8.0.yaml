@@ -59,3 +59,7 @@ tests:
   USER_LOGIN success: |
     type=USER_LOGIN msg=audit(1492810797.778:12651): pid=11396 uid=0 auid=1001 ses=36 msg='op=login id=1001 exe="/usr/sbin/sshd" hostname=72.83.230.100 addr=72.83.230.100 terminal=/dev/pts/1 res=success'
 
+  listen syscall: |
+    type=SYSCALL msg=audit(1493123198.373:25922): arch=c000003e syscall=50 success=yes exit=0 a0=e a1=80 a2=20 a3=7ffe900ae940 items=0 ppid=1 pid=23492 auid=1001 uid=1001 gid=1002 euid=1001 suid=1001 fsuid=1001 egid=1002 sgid=1002 fsgid=1002 tty=(none) ses=140 comm="systemd" exe="/lib/systemd/systemd" key="key=net"
+    type=PROCTITLE msg=audit(1493123198.373:25922): proctitle="(systemd)"
+    type=EOE msg=audit(1493123198.373:25922):

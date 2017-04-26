@@ -4,6 +4,7 @@
     "sequence": 911150,
     "category": "anomoly",
     "record_type": "anom_abend",
+    "result": "unknown",
     "session": "unset",
     "actor": {
       "primary": "unset",
@@ -13,7 +14,7 @@
         "gid": "48",
         "uid": "48"
       },
-      "subject": {
+      "selinux": {
         "domain": "httpd_t",
         "level": "s0",
         "role": "system_r",

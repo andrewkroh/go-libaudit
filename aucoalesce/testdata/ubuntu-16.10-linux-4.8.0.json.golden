@@ -26,6 +26,7 @@
       "what": "network-device"
     },
     "action": "changed-promiscuous-mode-on-device",
+    "how": "/sbin/ifconfig",
     "data": {
       "a0": "4",
       "a1": "8914",
@@ -198,6 +199,7 @@
       "what": "firewall"
     },
     "action": "loaded-firewall-rule-to",
+    "how": "/sbin/xtables-multi",
     "data": {
       "a0": "4",
       "a1": "0",
@@ -237,6 +239,7 @@
       "what": "service"
     },
     "action": "started-service",
+    "how": "/lib/systemd/systemd",
     "data": {
       "comm": "systemd",
       "exe": "/lib/systemd/systemd",
@@ -264,6 +267,7 @@
       "what": "user-session"
     },
     "action": "ended-session",
+    "how": "/usr/sbin/cron",
     "data": {
       "acct": "root",
       "exe": "/usr/sbin/cron",
@@ -353,6 +357,7 @@
       "what": "user-session"
     },
     "action": "started-session",
+    "how": "/usr/sbin/sshd",
     "data": {
       "acct": "andrew_kroh",
       "addr": "72.83.230.100",
@@ -507,6 +512,50 @@
       "addr": "169.254.169.254",
       "address_family": "ipv4",
       "port": "80"
+    }
+  },
+  {
+    "@timestamp": "2017-04-25T12:26:38.373Z",
+    "sequence": 25922,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "140",
+    "actor": {
+      "primary": "1001",
+      "secondary": "1001",
+      "attrs": {
+        "auid": "1001",
+        "egid": "1002",
+        "euid": "1001",
+        "fsgid": "1002",
+        "fsuid": "1001",
+        "gid": "1002",
+        "sgid": "1002",
+        "suid": "1001",
+        "uid": "1001"
+      }
+    },
+    "thing": {
+      "what": "socket"
+    },
+    "action": "listen-for-connections",
+    "how": "/lib/systemd/systemd",
+    "key": "net",
+    "data": {
+      "a0": "e",
+      "a1": "80",
+      "a2": "20",
+      "a3": "7ffe900ae940",
+      "arch": "x86_64",
+      "comm": "systemd",
+      "exe": "/lib/systemd/systemd",
+      "exit": "0",
+      "pid": "23492",
+      "ppid": "1",
+      "proctitle": "(systemd)",
+      "syscall": "listen",
+      "tty": "(none)"
     }
   }
 ]

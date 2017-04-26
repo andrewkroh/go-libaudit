@@ -1,0 +1,166 @@
+[
+  {
+    "@timestamp": "2017-04-25T13:05:24.089Z",
+    "sequence": 126,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "5",
+    "actor": {
+      "primary": "1001",
+      "secondary": "0",
+      "attrs": {
+        "auid": "1001",
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0",
+        "uid": "0"
+      }
+    },
+    "thing": {
+      "primary": "/etc/audit/rules.d/audit.rules",
+      "secondary": "271112",
+      "what": "file"
+    },
+    "action": "renamed",
+    "how": "/usr/bin/vim.basic",
+    "key": "auditconfig",
+    "data": {
+      "a0": "55942f993060",
+      "a1": "55942fb79090",
+      "a2": "fffffffffffffeb0",
+      "a3": "55942fb79090",
+      "arch": "x86_64",
+      "comm": "vim",
+      "cwd": "/home/andrew_kroh",
+      "exe": "/usr/bin/vim.basic",
+      "exit": "0",
+      "pid": "3231",
+      "ppid": "3207",
+      "proctitle": "vim",
+      "syscall": "rename",
+      "tty": "pts1"
+    },
+    "paths": [
+      {
+        "dev": "08:01",
+        "inode": "271071",
+        "item": "0",
+        "mode": "040750",
+        "name": "/etc/audit/rules.d/",
+        "nametype": "PARENT",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      },
+      {
+        "dev": "08:01",
+        "inode": "271071",
+        "item": "1",
+        "mode": "040750",
+        "name": "/etc/audit/rules.d/",
+        "nametype": "PARENT",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      },
+      {
+        "dev": "08:01",
+        "inode": "271112",
+        "item": "2",
+        "mode": "0100640",
+        "name": "/etc/audit/rules.d/audit.rules",
+        "nametype": "DELETE",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      },
+      {
+        "dev": "08:01",
+        "inode": "271112",
+        "item": "3",
+        "mode": "0100640",
+        "name": "/etc/audit/rules.d/audit.rules~",
+        "nametype": "CREATE",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      }
+    ]
+  },
+  {
+    "@timestamp": "2017-04-25T14:09:15.852Z",
+    "sequence": 624,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "5",
+    "actor": {
+      "primary": "1001",
+      "secondary": "0",
+      "attrs": {
+        "auid": "1001",
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0",
+        "uid": "0"
+      }
+    },
+    "thing": {
+      "primary": "/etc/audit/rules.d/.audit.rules.swp",
+      "secondary": "271044",
+      "what": "file"
+    },
+    "action": "deleted",
+    "how": "/usr/bin/vim.basic",
+    "key": "auditconfig",
+    "data": {
+      "a0": "55faa178f800",
+      "a1": "1",
+      "a2": "1",
+      "a3": "7ffd21b026d0",
+      "arch": "x86_64",
+      "comm": "vim",
+      "cwd": "/home/andrew_kroh",
+      "exe": "/usr/bin/vim.basic",
+      "exit": "0",
+      "pid": "3346",
+      "ppid": "3309",
+      "proctitle": "vim",
+      "syscall": "unlink",
+      "tty": "pts1"
+    },
+    "paths": [
+      {
+        "dev": "08:01",
+        "inode": "271071",
+        "item": "0",
+        "mode": "040750",
+        "name": "/etc/audit/rules.d/",
+        "nametype": "PARENT",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      },
+      {
+        "dev": "08:01",
+        "inode": "271044",
+        "item": "1",
+        "mode": "0100640",
+        "name": "/etc/audit/rules.d/.audit.rules.swp",
+        "nametype": "DELETE",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      }
+    ]
+  }
+]

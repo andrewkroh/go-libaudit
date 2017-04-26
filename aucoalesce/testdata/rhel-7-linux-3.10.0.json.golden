@@ -11,7 +11,7 @@
       "attrs": {
         "auid": "unset"
       },
-      "subject": {
+      "selinux": {
         "domain": "unconfined_service_t",
         "level": "s0",
         "role": "system_r",
@@ -41,7 +41,7 @@
       "attrs": {
         "auid": "unset"
       },
-      "subject": {
+      "selinux": {
         "domain": "unconfined_service_t",
         "level": "s0",
         "role": "system_r",
@@ -73,7 +73,7 @@
         "old-auid": "4294967295",
         "uid": "0"
       },
-      "subject": {
+      "selinux": {
         "category": "c0.c1023",
         "domain": "sshd_t",
         "level": "s0-s0",
@@ -105,7 +105,7 @@
         "auid": "unset",
         "uid": "0"
       },
-      "subject": {
+      "selinux": {
         "category": "c0.c1023",
         "domain": "sshd_t",
         "level": "s0-s0",
@@ -149,7 +149,7 @@
         "suid": "38",
         "uid": "38"
       },
-      "subject": {
+      "selinux": {
         "domain": "ntpd_t",
         "level": "s0",
         "role": "system_r",
@@ -199,7 +199,7 @@
         "suid": "0",
         "uid": "0"
       },
-      "subject": {
+      "selinux": {
         "domain": "systemd_logind_t",
         "level": "s0",
         "role": "system_r",
@@ -209,7 +209,13 @@
     "thing": {
       "primary": "/run/systemd/sessions/",
       "secondary": "11378",
-      "what": "file"
+      "what": "file",
+      "selinux": {
+        "domain": "systemd_logind_sessions_t",
+        "level": "s0",
+        "role": "object_r",
+        "user": "system_u"
+      }
     },
     "action": "make-device",
     "how": "/usr/lib/systemd/systemd-logind;58f98c85 (deleted)",
@@ -256,6 +262,86 @@
         "obj_role": "object_r",
         "obj_user": "system_u",
         "objtype": "CREATE",
+        "ogid": "0",
+        "ouid": "0",
+        "rdev": "00:00"
+      }
+    ]
+  },
+  {
+    "@timestamp": "2017-04-25T14:01:01.69Z",
+    "sequence": 48922,
+    "category": "audit-rule",
+    "record_type": "syscall",
+    "result": "success",
+    "session": "unset",
+    "actor": {
+      "primary": "unset",
+      "secondary": "0",
+      "attrs": {
+        "auid": "unset",
+        "egid": "0",
+        "euid": "0",
+        "fsgid": "0",
+        "fsuid": "0",
+        "gid": "0",
+        "sgid": "0",
+        "suid": "0",
+        "uid": "0"
+      },
+      "selinux": {
+        "domain": "systemd_logind_t",
+        "level": "s0",
+        "role": "system_r",
+        "user": "system_u"
+      }
+    },
+    "thing": {
+      "primary": "/run/user/0",
+      "secondary": "454267",
+      "what": "file",
+      "selinux": {
+        "domain": "user_tmp_t",
+        "level": "s0",
+        "role": "object_r",
+        "user": "system_u"
+      }
+    },
+    "action": "mounted",
+    "how": "/usr/lib/systemd/systemd-logind;58f98c85 (deleted)",
+    "key": "mount",
+    "data": {
+      "a0": "7ff61c0a7270",
+      "a1": "7ff61dddf470",
+      "a2": "7ff61c0a7270",
+      "a3": "6",
+      "arch": "x86_64",
+      "comm": "systemd-logind",
+      "cwd": "/",
+      "exe": "/usr/lib/systemd/systemd-logind;58f98c85 (deleted)",
+      "exit": "0",
+      "pid": "326",
+      "ppid": "1",
+      "syscall": "mount",
+      "tty": "(none)"
+    },
+    "paths": [
+      {
+        "item": "0",
+        "name": "/run/user/0",
+        "objtype": "UNKNOWN"
+      },
+      {
+        "dev": "00:13",
+        "inode": "454267",
+        "item": "1",
+        "mode": "040700",
+        "name": "/run/user/0",
+        "obj_domain": "user_tmp_t",
+        "obj_level": "s0",
+        "obj_role": "object_r",
+        "obj_user": "system_u",
+        "objtype": "NORMAL",
         "ogid": "0",
         "ouid": "0",
         "rdev": "00:00"

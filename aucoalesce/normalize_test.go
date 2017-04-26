@@ -23,7 +23,6 @@ import (
 )
 
 func TestNormInit(t *testing.T) {
-	assert.NotNil(t, norms)
 	assert.NotEmpty(t, syscallNorms)
 	assert.NotEmpty(t, recordTypeNorms)
 }
@@ -34,7 +33,7 @@ func TestLoadNormalizationConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := LoadNormalizationConfig(b); err != nil {
+	if _, _, err := LoadNormalizationConfig(b); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -70,6 +70,7 @@ normalizations:
   action: created-directory
   object:
     what: file
+    path_index: 1
   syscalls:
   - mkdir
   - mkdirat
@@ -84,9 +85,11 @@ normalizations:
   action: renamed
   object:
     what: file
+    path_index: 2
   syscalls:
-  - mkdir
-  - mkdirat
+  - rename
+  - renameat
+  - renameat2
 -
   action: checked-metadata-of
   object:
@@ -99,6 +102,9 @@ normalizations:
   - fstat
   - lstat
   - stat64
+  - getxattr
+  - lgetxattr
+  - fgetxattr
 -
   action: checked-filesystem-metadata-of
   object:
@@ -144,6 +150,12 @@ normalizations:
   syscalls:
   - execve
   - execveat
+-
+  action: listen-for-connections
+  object:
+    what: socket
+  syscalls:
+  - listen
 -
   action: accepted-connection-from
   object:
@@ -519,10 +531,6 @@ normalizations:
   record_types:
   - KERNEL
 -
-  action: loaded-kernel-module
-  record_types:
-  - KERN_MODULE
--
   action: modified-level-of
   object:
     primary: printer
@@ -694,6 +702,7 @@ normalizations:
   object:
     primary: terminal
     what: user-session
+  how: [terminal, exe]
   record_types:
   - USER_ERR
 -
@@ -747,10 +756,6 @@ normalizations:
   record_types:
   - USER_START
 -
-  action: typed
-  record_types:
-  - USER_TTY
--
   action: changed-configuration
   object:
     primary: op
@@ -800,3 +805,11 @@ normalizations:
     what: virtual-machine
   record_types:
   - VIRT_RESOURCE
+- action: typed
+  object:
+    primary: data
+    what: keystrokes
+  how: [comm, exe]
+  record_types:
+  - TTY
+  - USER_TTY

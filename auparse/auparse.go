@@ -520,6 +520,7 @@ func auditRuleKey(data map[string]string) {
 		return
 	}
 
+	// TODO: test multiple keys
 	parts := strings.SplitN(value, "=", 2)
 	if len(parts) != 2 {
 		return
