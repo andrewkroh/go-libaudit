@@ -19,6 +19,7 @@ package libaudit
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"syscall"
@@ -28,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/elastic/go-libaudit/auparse"
+	"github.com/elastic/go-libaudit/rule"
 )
 
 const (
@@ -97,7 +99,7 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	}
 
 	if ack.Header.Type != syscall.NLMSG_ERROR {
-		return nil, errors.Errorf("unexpected ACK to GET, type=%d", ack.Header.Type)
+		return nil, errors.Errorf("unexpected ACK to GET, got type=%d", ack.Header.Type)
 	}
 
 	if err = ParseNetlinkError(ack.Data); err != NLE_SUCCESS {
@@ -118,7 +120,7 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	}
 
 	if reply.Header.Type != AuditGet {
-		return nil, errors.Errorf("unexpected reply to GET, type%d", reply.Header.Type)
+		return nil, errors.Errorf("unexpected reply to GET, got type=%d", reply.Header.Type)
 	}
 
 	replyStatus := &AuditStatus{}
@@ -127,6 +129,70 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	}
 
 	return replyStatus, nil
+}
+
+func (c *AuditClient) GetRules() ([]*rule.AuditRuleData, error) {
+	msg := syscall.NetlinkMessage{
+		Header: syscall.NlMsghdr{
+			Type:  uint16(auparse.AUDIT_LIST_RULES),
+			Flags: syscall.NLM_F_REQUEST | syscall.NLM_F_ACK,
+		},
+		Data: nil,
+	}
+
+	// Send AUDIT_LIST_RULES message to the kernel.
+	seq, err := c.Netlink.Send(msg)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed sending request")
+	}
+
+	// Get the ack message which is a NLMSG_ERROR type whose error code is SUCCESS.
+	ack, err := c.getReply(seq)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get audit status ack")
+	}
+
+	if ack.Header.Type != syscall.NLMSG_ERROR {
+		return nil, errors.Errorf("unexpected ACK to LIST_RULES, got type=%d", ack.Header.Type)
+	}
+
+	if err = ParseNetlinkError(ack.Data); err != NLE_SUCCESS {
+		if len(ack.Data) >= 4+12 {
+			status := &AuditStatus{}
+			if err = status.fromWireFormat(ack.Data[4:]); err == nil {
+				return nil, syscall.Errno(status.Failure)
+			}
+		}
+		return nil, err
+	}
+
+	var rules []*rule.AuditRuleData
+	for {
+		reply, err := c.getReply(seq)
+		if err != nil {
+			fmt.Println("breaking due to error:", err)
+			break
+		}
+
+		if reply.Header.Type == syscall.NLMSG_DONE {
+			fmt.Println("breaking due to NLMSG_DONE")
+			break
+		}
+
+		if reply.Header.Type != uint16(auparse.AUDIT_LIST_RULES) {
+			fmt.Println("breaking due to unknown type", reply.Header.Type)
+			break
+		}
+
+		r, err := rule.FromWireFormat(reply.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		rules = append(rules, r)
+	}
+
+	return rules, nil
 }
 
 // SetPID sends a netlink message to the kernel telling it the PID of the

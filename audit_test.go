@@ -19,12 +19,14 @@ package libaudit
 import (
 	"encoding/hex"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"syscall"
 	"testing"
 	"time"
 
+	"github.com/elastic/go-libaudit/rule"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,6 +69,34 @@ func getStatus(t testing.TB) (*AuditStatus, error) {
 	defer c.Close()
 
 	return c.GetStatus()
+}
+
+func TestAuditClientGetRules(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("must be root to get audit status")
+	}
+
+	var dumper io.WriteCloser
+	if *hexdump {
+		dumper = hex.Dumper(os.Stdout)
+		defer dumper.Close()
+	}
+
+	c, err := NewAuditClient(dumper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	rules, err := c.GetRules()
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	for _, r := range rules {
+		fmt.Printf("%+v\n", r)
+		rule.PrintRule(r)
+	}
 }
 
 func TestAuditClientSetPID(t *testing.T) {

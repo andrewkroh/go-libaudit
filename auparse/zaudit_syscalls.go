@@ -2700,3 +2700,5 @@ var auditSyscalls = map[string]map[int]string{
 		326: "copy_file_range",
 	},
 }
+
+var Syscalls = auditSyscalls
