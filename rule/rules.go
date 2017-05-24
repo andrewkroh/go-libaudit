@@ -6,9 +6,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-
+	"os/user"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/elastic/go-libaudit/auparse"
 	"github.com/pkg/errors"
@@ -260,12 +261,27 @@ func addFilter(rule *Data, lhs, comparator, rhs string) error {
 	case UIDField, EUIDField, SUIDField, FSUIDField, AUIDField, ObjectUIDField:
 		// Convert RHS to number.
 		// Or attempt to lookup the name to get the number.
+		uid, err := getUID(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, uid)
 	case GIDField, EGIDField, SGIDField, FSGIDField, ObjectGIDField:
-		// Convert RHS to number.
+		gid, err := getGID(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, gid)
 	case ExitField:
 		// Flag must be FilterExit.
-		// Convert RHS to number.
-		// Or convert error name to number.
+		if rule.flags != FilterExit {
+			return errors.New("exit filter can only be applied to syscall exit")
+		}
+		exitCode, err := getExitCode(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, uint32(exitCode))
 	case MsgTypeField:
 		// Flag must not be exclude or user.
 		// Convert RHS to number.
@@ -309,6 +325,72 @@ func addFilter(rule *Data, lhs, comparator, rhs string) error {
 	rule.fields = append(rule.fields, field)
 	rule.fieldFlags = append(rule.fieldFlags, op)
 	return nil
+}
+
+func getUID(uid string) (uint32, error) {
+	v, err := strconv.ParseUint(uid, 10, 32)
+	if nerr, ok := err.(*strconv.NumError); ok {
+		if nerr.Err != strconv.ErrSyntax {
+			return 0, errors.Wrapf(err, "failed to parse uid '%v'", uid)
+		}
+
+		u, err := user.Lookup(uid)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to convert user '%v' to a numeric ID", uid)
+		}
+
+		v, err = strconv.ParseUint(u.Uid, 10, 32)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to parse uid '%v' belonging to user '%v'", u.Uid, u.Username)
+		}
+	}
+
+	return uint32(v), nil
+}
+
+func getGID(gid string) (uint32, error) {
+	v, err := strconv.ParseUint(gid, 10, 32)
+	if nerr, ok := err.(*strconv.NumError); ok {
+		if nerr.Err != strconv.ErrSyntax {
+			return 0, errors.Wrapf(err, "failed to parse gid '%v'", gid)
+		}
+
+		g, err := user.LookupGroup(gid)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to convert group '%v' to a numeric ID", gid)
+		}
+
+		v, err = strconv.ParseUint(g.Gid, 10, 32)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to parse gid '%v' belonging to group '%v'", g.Gid, g.Name)
+		}
+	}
+
+	return uint32(v), nil
+}
+
+func getExitCode(exit string) (int32, error) {
+	v, err := strconv.ParseInt(exit, 10, 32)
+	if nerr, ok := err.(*strconv.NumError); ok {
+		if nerr.Err != strconv.ErrSyntax {
+			return 0, errors.Wrapf(err, "failed to parse exit code '%v'", exit)
+		}
+
+		sign := 1
+		code := exit
+		if strings.HasPrefix(exit, "-") {
+			sign = -1
+			code = exit[1:]
+		}
+
+		num, found := auparse.AuditErrnoToNum[code]
+		if !found {
+			return 0, errors.Errorf("failed to convert error to exit code '%v'", exit)
+		}
+		v = int64(sign * num)
+	}
+
+	return int32(v), nil
 }
 
 func addInterFieldComparator(rule *Data, lhs, comparator, rhs string) error {
