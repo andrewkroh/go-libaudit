@@ -15,9 +15,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+//go:generate sh -c "go tool cgo -godefs defs_audit_types_linux.go > zaudit_types.go && gofmt -w zaudit_types.go"
+
 const (
 	AUDIT_BITMASK_SIZE = 64
 	AUDIT_MAX_FIELDS   = 64
+	AUDIT_MAX_KEY_LEN  = 256
+	PathMax            = 4096
 )
 
 // auditRuleData supports filter rules with both integer and string
@@ -168,6 +172,59 @@ type Data struct {
 	strings []string
 }
 
+func (d Data) BuildRule() (*AuditRuleData, error) {
+	rule := &AuditRuleData{
+		Flags:      d.flags,
+		Action:     d.action,
+		FieldCount: uint32(len(d.fields)),
+	}
+
+	if d.allSyscalls {
+		for i := range rule.Mask {
+			rule.Mask[i] = 0xFFFF
+		}
+	} else {
+		for _, syscallNum := range d.syscalls {
+			word := syscallNum / 32
+			var bit uint32 = 1 << (syscallNum - (word * 32))
+			if int(word) > len(rule.Mask) {
+				return nil, errors.Errorf("invalid syscall number %v", syscallNum)
+			}
+			rule.Mask[word] |= bit
+		}
+	}
+
+	if len(d.fields) > len(rule.Fields) {
+		return nil, errors.Errorf("too many filters and keys, only %v total are supported", len(rule.Fields))
+	}
+	for i := range d.fields {
+		rule.Fields[i] = d.fields[i]
+		rule.FieldFlags[i] = d.fieldFlags[i]
+		rule.Values[i] = d.values[i]
+	}
+
+	for _, s := range d.strings {
+		rule.Buf = append(rule.Buf, []byte(s)...)
+	}
+	rule.BufLen = uint32(len(rule.Buf))
+
+	return rule, nil
+}
+
+func BuildAuditRule(flags string) ([]byte, error) {
+	data, err := Create(flags)
+	if err != nil {
+		return nil, err
+	}
+
+	auditRule, err := data.BuildRule()
+	if err != nil {
+		return nil, err
+	}
+
+	return auditRule.toWireFormat(), nil
+}
+
 func addFlag(rule *Data, list string) error {
 	switch list {
 	case "exit":
@@ -283,43 +340,105 @@ func addFilter(rule *Data, lhs, comparator, rhs string) error {
 		}
 		rule.values = append(rule.values, uint32(exitCode))
 	case MsgTypeField:
-		// Flag must not be exclude or user.
-		// Convert RHS to number.
-		// Or convert type name to number.
+		// Flag must be exclude or user.
+		if rule.flags != FilterUser && rule.flags != FilterExclude {
+			return errors.New("msgtype filter can only be applied to the user or exclude lists")
+		}
+		msgType, err := getAuditMsgType(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, msgType)
 	case ObjectUserField, ObjectRoleField, ObjectTypeField, ObjectLevelLowField,
 		ObjectLevelHighField, PathField, DirField:
 		// Flag must be FilterExit.
+		if rule.flags != FilterExit {
+			return errors.Errorf("%v filter can only be applied to the syscall exit", lhs)
+		}
 		fallthrough
 	case SubjectUserField, SubjectRoleField, SubjectTypeField,
 		SubjectSensitivityField, SubjectClearanceField, KeyField:
-		//ExeField:
+		// ExeField:
 		// Add string to strings.
+		if field == KeyField && len(rhs) > AUDIT_MAX_KEY_LEN {
+			return errors.Errorf("%v cannot be longer than %v", lhs, AUDIT_MAX_KEY_LEN)
+		} else if len(rhs) > PathMax {
+			return errors.Errorf("%v cannot be longer than %v", lhs, PathMax)
+		}
+		rule.values = append(rule.values, uint32(len(rhs)))
 		rule.strings = append(rule.strings, rhs)
 	case ArchField:
 		// Arch should come before syscall.
 		// Arch only supports = and !=.
-		// Use number (if valid).
-		// Or convert name to arch.
+		if op != EqualOperator && op != NotEqualOperator {
+			return errors.Errorf("arch only supports the = and != operators")
+		}
+		// Or convert name to arch or validate given arch.
+		arch, err := getArch(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, arch)
 	case PermField:
 		// Perm is only valid for exit.
+		if rule.flags != FilterExit {
+			return errors.Errorf("perm filter can only be applied to the syscall exit")
+		}
 		// Perm is only valid for =.
-		// OR the permission bits together.
+		if op != EqualOperator {
+			return errors.Errorf("perm only support the = operator")
+		}
+		perm, err := getPerm(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, perm)
 	case FiletypeField:
 		// Filetype is only valid for exit.
-		// Convert filetype to value.
+		if rule.flags != FilterExit {
+			return errors.Errorf("filetype filter can only be applied to the syscall exit")
+		}
+		filetype, err := getFiletype(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, uint32(filetype))
 	case Arg0Field, Arg1Field, Arg2Field, Arg3Field:
 		// Convert RHS to a number.
+		arg, err := ParseNum(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, arg)
 	//case SessionIDField:
 	case InodeField:
 		// Flag must be FilterExit.
+		if rule.flags != FilterExit {
+			return errors.Errorf("inode filter can only be applied to the syscall exit")
+		}
 		// Comparator must be = or !=.
+		if op != EqualOperator && op != NotEqualOperator {
+			return errors.Errorf("inode only supports the = and != operators")
+		}
 		// Convert RHS to number.
+		inode, err := ParseNum(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, inode)
 	case DevMajorField, DevMinorField, SuccessField, PPIDField:
 		// Flag must be FilterExit.
-		// Convert RHS to number.
+		if rule.flags != FilterExit {
+			return errors.Errorf("%v filter can only be applied to the syscall exit", lhs)
+		}
+		fallthrough
 	default:
-		// Must be a number.
 		// Convert RHS to number.
+		num, err := ParseNum(rhs)
+		if err != nil {
+			return err
+		}
+		rule.values = append(rule.values, num)
 	}
 
 	rule.fields = append(rule.fields, field)
@@ -391,6 +510,137 @@ func getExitCode(exit string) (int32, error) {
 	}
 
 	return int32(v), nil
+}
+
+func getArch(arch string) (uint32, error) {
+	var realArch = arch
+	switch strings.ToLower(arch) {
+	case "b64":
+		runtimeArch, err := getRuntimeArch()
+		if err != nil {
+			return 0, err
+		}
+
+		switch runtimeArch {
+		case "aarch64", "x86_64", "ppc":
+			realArch = runtimeArch
+		default:
+			return 0, errors.Errorf("cannot use b64 on %v", runtimeArch)
+		}
+	case "b32":
+		runtimeArch, err := getRuntimeArch()
+		if err != nil {
+			return 0, err
+		}
+
+		switch runtimeArch {
+		case "arm", "i386":
+			realArch = runtimeArch
+		case "aarch64":
+			realArch = "arm"
+		case "x86_64":
+			realArch = "i386"
+		default:
+			return 0, errors.Errorf("cannot use b32 on %v", runtimeArch)
+		}
+	}
+
+	archValue, found := ReverseArch[realArch]
+	if !found {
+		return 0, errors.Errorf("unknown arch '%v'", arch)
+	}
+	return archValue, nil
+}
+
+// getRuntimeArch returns the programs arch (not the machines arch).
+func getRuntimeArch() (string, error) {
+	var arch string
+	switch runtime.GOARCH {
+	case "arm":
+		arch = "arm"
+	case "arm64":
+		arch = "aarch64"
+	case "386":
+		arch = "i386"
+	case "amd64":
+		arch = "x86_64"
+	case "ppc64", "ppc64le":
+		arch = "ppc"
+	case "mips", "mipsle", "mips64", "mips64le":
+		fallthrough
+	default:
+		return "", errors.Errorf("unsupported arch: %v", runtime.GOARCH)
+	}
+
+	return arch, nil
+}
+
+func getAuditMsgType(msgType string) (uint32, error) {
+	v, err := strconv.ParseUint(msgType, 10, 32)
+	if nerr, ok := err.(*strconv.NumError); ok {
+		if nerr.Err != strconv.ErrSyntax {
+			return 0, errors.Wrapf(err, "failed to parse msgtype '%v'", msgType)
+		}
+
+		typ, err := auparse.GetAuditMessageType(msgType)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to convert msgtype '%v' to numeric value", msgType)
+		}
+		v = uint64(typ)
+	}
+
+	return uint32(v), nil
+}
+
+func getPerm(perm string) (uint32, error) {
+	var permBits Permission
+	for _, p := range perm {
+		switch p {
+		case 'r':
+			permBits |= ReadPerm
+		case 'w':
+			permBits |= WritePerm
+		case 'x':
+			permBits |= ExecPerm
+		case 'a':
+			permBits |= AttrPerm
+		default:
+			return 0, errors.Errorf("invalid permission access type '%v'", p)
+		}
+	}
+
+	return uint32(permBits), nil
+}
+
+func getFiletype(filetype string) (Filetype, error) {
+	switch strings.ToLower(filetype) {
+	case "file":
+		return FileFiletype, nil
+	case "dir":
+		return DirFiletype, nil
+	case "socket":
+		return SocketFiletype, nil
+	case "symlink":
+		return LinkFiletype, nil
+	case "char":
+		return CharacterFiletype, nil
+	case "block":
+		return BlockFiletype, nil
+	case "fifo":
+		return FIFOFiletype, nil
+	default:
+		return 0, errors.Errorf("invalid filetype '%v'", filetype)
+	}
+}
+
+func ParseNum(num string) (uint32, error) {
+	if strings.HasPrefix(num, "-") {
+		v, err := strconv.ParseInt(num, 10, 32)
+		return uint32(v), err
+	} else {
+		v, err := strconv.ParseUint(num, 10, 32)
+		return uint32(v), err
+	}
 }
 
 func addInterFieldComparator(rule *Data, lhs, comparator, rhs string) error {
@@ -576,29 +826,17 @@ func buildReverseSyscallTable() {
 	}
 }
 
-func init() {
-	buildReverseSyscallTable()
+var ReverseArch map[string]uint32
+
+func buildReverseArchTable() {
+	ReverseArch = make(map[string]uint32, len(auparse.ArchTable))
+
+	for arch, name := range auparse.ArchTable {
+		ReverseArch[name] = uint32(arch)
+	}
 }
 
-// getRuntimeArch returns the programs arch (not the machines arch).
-func getRuntimeArch() (string, error) {
-	var arch string
-	switch runtime.GOARCH {
-	case "arm":
-		arch = "arm"
-	case "arm64":
-		arch = "aarch64"
-	case "386":
-		arch = "i386"
-	case "amd64":
-		arch = "x86_64"
-	case "ppc64", "ppc64le":
-		arch = "ppc"
-	case "mips", "mipsle", "mips64", "mips64le":
-		fallthrough
-	default:
-		return "", errors.Errorf("unsupported arch: %v", runtime.GOARCH)
-	}
-
-	return arch, nil
+func init() {
+	buildReverseSyscallTable()
+	buildReverseArchTable()
 }

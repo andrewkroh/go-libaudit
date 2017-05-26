@@ -122,3 +122,24 @@ const (
 	AUDIT_COMPARE_EGID_TO_SGID  Comparison = 0x18
 	AUDIT_COMPARE_SGID_TO_FSGID Comparison = 0x19
 )
+
+type Permission uint32
+
+const (
+	ExecPerm  Permission = 0x1
+	WritePerm Permission = 0x2
+	ReadPerm  Permission = 0x4
+	AttrPerm  Permission = 0x8
+)
+
+type Filetype uint32
+
+const (
+	FileFiletype      Filetype = 0x8000
+	SocketFiletype    Filetype = 0xc000
+	LinkFiletype      Filetype = 0xa000
+	BlockFiletype     Filetype = 0x6000
+	DirFiletype       Filetype = 0x4000
+	CharacterFiletype Filetype = 0x2000
+	FIFOFiletype      Filetype = 0x1000
+)

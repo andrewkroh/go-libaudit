@@ -79,3 +79,5 @@ func (a auditArch) String() string {
 
 	return fmt.Sprintf("unknown[%x]", uint32(a))
 }
+
+var ArchTable = auditArchNames

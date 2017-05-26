@@ -1,23 +1,48 @@
 package rule
 
 import (
+	"io/ioutil"
+	"math"
+	"os/user"
 	"runtime"
+	"strconv"
+	"strings"
 	"syscall"
 	"testing"
 
+	"github.com/elastic/go-libaudit/auparse"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
-func TestCreate(t *testing.T) {
-	flags := "-a always,exit -F arch=b64 -S sendto,sendmsg -F key=send"
+type TestData struct {
+	Rules []RuleTest `yaml:"rules"`
+}
 
-	data, err := Create(flags)
+type RuleTest struct {
+	Flags string `yaml:"flags"`
+	Bytes string `yaml:"bytes"`
+}
+
+func TestBuildAuditRule(t *testing.T) {
+	testdata, err := ioutil.ReadFile("testdata/rule_data.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log(flags)
-	t.Logf("%+v", data)
+	var tests TestData
+	if err := yaml.Unmarshal(testdata, &tests); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, test := range tests.Rules {
+		actualBytes, err := BuildAuditRule(test.Flags)
+		if err != nil {
+			t.Error("rule", test.Flags, "error:", err)
+		}
+
+		assert.Equal(t, []byte(test.Bytes), actualBytes, "failed on rule %v: %v", i, test.Flags)
+	}
 }
 
 func TestAddFlag(t *testing.T) {
@@ -152,8 +177,13 @@ func TestAddFilter(t *testing.T) {
 		assert.EqualValues(t, 500, rule.values[0])
 	})
 	t.Run("egid", func(t *testing.T) {
+		group, err := user.LookupGroupId("0")
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		rule := &Data{}
-		if err := addFilter(rule, "egid", "=", "wheel"); err != nil {
+		if err := addFilter(rule, "egid", "=", group.Name); err != nil {
 			t.Fatal(err)
 		}
 		assert.EqualValues(t, EGIDField, rule.fields[0])
@@ -199,5 +229,128 @@ func TestAddFilter(t *testing.T) {
 		assert.EqualValues(t, ExitField, rule.fields[0])
 		assert.EqualValues(t, NotEqualOperator, rule.fieldFlags[0])
 		assert.EqualValues(t, -1*int(syscall.EPERM), rule.values[0])
+	})
+
+	t.Run("msgtype", func(t *testing.T) {
+		t.Run("exit", func(t *testing.T) {
+			rule := &Data{flags: FilterExit}
+			if err := addFilter(rule, "msgtype", "=", "EXECVE"); err == nil {
+				t.Fatal("expected error")
+			}
+		})
+
+		t.Run("user", func(t *testing.T) {
+			rule := &Data{flags: FilterUser}
+			if err := addFilter(rule, "msgtype", "=", "EXECVE"); err != nil {
+				t.Fatal(err)
+			}
+			assert.EqualValues(t, MsgTypeField, rule.fields[0])
+			assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+			assert.EqualValues(t, auparse.AUDIT_EXECVE, rule.values[0])
+		})
+
+		t.Run("exclude", func(t *testing.T) {
+			rule := &Data{flags: FilterExclude}
+			if err := addFilter(rule, "msgtype", "=", "1309"); err != nil {
+				t.Fatal(err)
+			}
+			assert.EqualValues(t, MsgTypeField, rule.fields[0])
+			assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+			assert.EqualValues(t, auparse.AUDIT_EXECVE, rule.values[0])
+		})
+
+		t.Run("unknown", func(t *testing.T) {
+			rule := &Data{flags: FilterExclude}
+			if err := addFilter(rule, "msgtype", "=", "UNKNOWN"); err == nil {
+				t.Fatal("expected error")
+			}
+		})
+	})
+
+	t.Run("path", func(t *testing.T) {
+		const etcPasswd = "/etc/passwd"
+		rule := &Data{flags: FilterExit}
+		if err := addFilter(rule, "path", "=", etcPasswd); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, PathField, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, etcPasswd, rule.strings[0])
+	})
+
+	t.Run("key_too_long", func(t *testing.T) {
+		rule := &Data{}
+		if err := addFilter(rule, "key", "=", strings.Repeat("x", AUDIT_MAX_KEY_LEN)); err != nil {
+			t.Fatal(err)
+		}
+		if err := addFilter(rule, "key", "=", strings.Repeat("x", AUDIT_MAX_KEY_LEN+1)); err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("arch_b32", func(t *testing.T) {
+		if runtime.GOARCH != "amd64" {
+			t.Skip("arch test expects amd64")
+		}
+		rule := &Data{}
+		if err := addFilter(rule, "arch", "=", "b32"); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, ArchField, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, auparse.AUDIT_ARCH_I386, rule.values[0])
+	})
+
+	t.Run("arch_b64", func(t *testing.T) {
+		if runtime.GOARCH != "amd64" {
+			t.Skip("arch test expects amd64")
+		}
+		rule := &Data{}
+		if err := addFilter(rule, "arch", "=", "b64"); err != nil {
+			t.Fatalf("%+v", err)
+		}
+		assert.EqualValues(t, ArchField, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, auparse.AUDIT_ARCH_X86_64, rule.values[0])
+	})
+
+	t.Run("perm", func(t *testing.T) {
+		rule := &Data{flags: FilterExit}
+		if err := addFilter(rule, "perm", "=", "wa"); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, PermField, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, WritePerm|AttrPerm, rule.values[0])
+	})
+
+	t.Run("filetype", func(t *testing.T) {
+		rule := &Data{flags: FilterExit}
+		if err := addFilter(rule, "filetype", "=", "dir"); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, FiletypeField, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, DirFiletype, rule.values[0])
+	})
+
+	t.Run("arg_max_uint32", func(t *testing.T) {
+		rule := &Data{}
+		if err := addFilter(rule, "a3", "=", strconv.FormatUint(math.MaxUint32, 10)); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, Arg3Field, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, math.MaxUint32, rule.values[0])
+	})
+
+	t.Run("arg_min_int32", func(t *testing.T) {
+		rule := &Data{}
+		if err := addFilter(rule, "a3", "=", strconv.FormatInt(math.MinInt32, 10)); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, Arg3Field, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, math.MinInt32, rule.values[0])
 	})
 }

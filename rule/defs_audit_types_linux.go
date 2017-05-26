@@ -4,6 +4,7 @@ package rule
 
 /*
 #include <linux/audit.h>
+#include <linux/stat.h>
 */
 import "C"
 
@@ -130,4 +131,25 @@ const (
 	AUDIT_COMPARE_EGID_TO_FSGID Comparison = C.AUDIT_COMPARE_EGID_TO_FSGID
 	AUDIT_COMPARE_EGID_TO_SGID  Comparison = C.AUDIT_COMPARE_EGID_TO_SGID
 	AUDIT_COMPARE_SGID_TO_FSGID Comparison = C.AUDIT_COMPARE_SGID_TO_FSGID
+)
+
+type Permission uint32
+
+const (
+	ExecPerm  Permission = C.AUDIT_PERM_EXEC
+	WritePerm Permission = C.AUDIT_PERM_WRITE
+	ReadPerm  Permission = C.AUDIT_PERM_READ
+	AttrPerm  Permission = C.AUDIT_PERM_ATTR
+)
+
+type Filetype uint32
+
+const (
+	FileFiletype      Filetype = C.S_IFREG
+	SocketFiletype    Filetype = C.S_IFSOCK
+	LinkFiletype      Filetype = C.S_IFLNK
+	BlockFiletype     Filetype = C.S_IFBLK
+	DirFiletype       Filetype = C.S_IFDIR
+	CharacterFiletype Filetype = C.S_IFCHR
+	FIFOFiletype      Filetype = C.S_IFIFO
 )
