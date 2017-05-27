@@ -21,7 +21,8 @@ const (
 	AUDIT_BITMASK_SIZE = 64
 	AUDIT_MAX_FIELDS   = 64
 	AUDIT_MAX_KEY_LEN  = 256
-	PathMax            = 4096
+	PathMax            = 4096 // PATH_MAX
+	KeySeparator       = 0x01 // AUDIT_KEY_SEPARATOR
 )
 
 // auditRuleData supports filter rules with both integer and string
@@ -149,9 +150,10 @@ func Create(flags string) (*Data, error) {
 		}
 	}
 
-	for _, key := range flagSet.Key {
-		if err = addFilter(rule, "key", "=", key); err != nil {
-			return nil, errors.Wrapf(err, "failed to add key '%v'", key)
+	if len(flagSet.Key) > 0 {
+		keys := strings.Join(flagSet.Key, string(KeySeparator))
+		if err = addFilter(rule, "key", "=", keys); err != nil {
+			return nil, errors.Wrapf(err, "failed to add keys [%v]", strings.Join(flagSet.Key, ","))
 		}
 	}
 
