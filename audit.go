@@ -19,7 +19,6 @@ package libaudit
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"os"
 	"syscall"
@@ -29,7 +28,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/elastic/go-libaudit/auparse"
-	"github.com/elastic/go-libaudit/rule"
 )
 
 const (
@@ -131,7 +129,7 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	return replyStatus, nil
 }
 
-func (c *AuditClient) GetRules() ([]*rule.AuditRuleData, error) {
+func (c *AuditClient) getRules() ([][]byte, error) {
 	msg := syscall.NetlinkMessage{
 		Header: syscall.NlMsghdr{
 			Type:  uint16(auparse.AUDIT_LIST_RULES),
@@ -149,7 +147,7 @@ func (c *AuditClient) GetRules() ([]*rule.AuditRuleData, error) {
 	// Get the ack message which is a NLMSG_ERROR type whose error code is SUCCESS.
 	ack, err := c.getReply(seq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get audit status ack")
+		return nil, errors.Wrap(err, "failed to get audit ACK")
 	}
 
 	if ack.Header.Type != syscall.NLMSG_ERROR {
@@ -166,33 +164,100 @@ func (c *AuditClient) GetRules() ([]*rule.AuditRuleData, error) {
 		return nil, err
 	}
 
-	var rules []*rule.AuditRuleData
+	var rules [][]byte
 	for {
 		reply, err := c.getReply(seq)
 		if err != nil {
-			fmt.Println("breaking due to error:", err)
-			break
+			return nil, errors.Wrap(err, "failed receive rule data")
 		}
 
 		if reply.Header.Type == syscall.NLMSG_DONE {
-			fmt.Println("breaking due to NLMSG_DONE")
 			break
 		}
 
 		if reply.Header.Type != uint16(auparse.AUDIT_LIST_RULES) {
-			fmt.Println("breaking due to unknown type", reply.Header.Type)
-			break
+			return nil, errors.Errorf("unexpected message type %d while receiving rules", reply.Header.Type)
 		}
 
-		r, err := rule.FromWireFormat(reply.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		rules = append(rules, r)
+		rules = append(rules, reply.Data)
 	}
 
 	return rules, nil
+}
+
+func (c *AuditClient) DeleteRules() (int, error) {
+	rules, err := c.getRules()
+	if err != nil {
+		return 0, err
+	}
+
+	for i, rule := range rules {
+		if err := c.DeleteRule(rule); err != nil {
+			return 0, errors.Wrapf(err, "failed to delete rule %v of %v", i, len(rules))
+		}
+	}
+
+	return len(rules), nil
+}
+
+func (c *AuditClient) DeleteRule(rule []byte) error {
+	msg := syscall.NetlinkMessage{
+		Header: syscall.NlMsghdr{
+			Type:  uint16(auparse.AUDIT_DEL_RULE),
+			Flags: syscall.NLM_F_REQUEST | syscall.NLM_F_ACK,
+		},
+		Data: rule,
+	}
+
+	// Send AUDIT_DEL_RULE message to the kernel.
+	seq, err := c.Netlink.Send(msg)
+	if err != nil {
+		return errors.Wrapf(err, "failed sending delete request")
+	}
+
+	_, err = c.getReply(seq)
+	if err != nil {
+		return errors.Wrap(err, "failed to get ACK to rule delete request")
+	}
+
+	return nil
+}
+
+func (c *AuditClient) AddRule(rule []byte) error {
+	msg := syscall.NetlinkMessage{
+		Header: syscall.NlMsghdr{
+			Type:  uint16(auparse.AUDIT_ADD_RULE),
+			Flags: syscall.NLM_F_REQUEST | syscall.NLM_F_ACK,
+		},
+		Data: rule,
+	}
+
+	// Send AUDIT_ADD_RULE message to the kernel.
+	seq, err := c.Netlink.Send(msg)
+	if err != nil {
+		return errors.Wrapf(err, "failed sending delete request")
+	}
+
+	ack, err := c.getReply(seq)
+	if err != nil {
+		return errors.Wrap(err, "failed to get ACK to rule delete request")
+	}
+
+	if ack.Header.Type != syscall.NLMSG_ERROR {
+		return errors.Errorf("unexpected ACK to AUDIT_ADD_RULE, got type=%d", ack.Header.Type)
+	}
+
+	if err = ParseNetlinkError(ack.Data); err != NLE_SUCCESS {
+		if len(ack.Data) >= 4+12 {
+			status := &AuditStatus{}
+			if err = status.fromWireFormat(ack.Data[4:]); err == nil {
+				return syscall.Errno(status.Failure)
+			}
+		}
+		return err
+	}
+
+	return nil
 }
 
 // SetPID sends a netlink message to the kernel telling it the PID of the

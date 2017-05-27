@@ -26,9 +26,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elastic/go-libaudit/rule"
+	"encoding/base64"
+
 	"github.com/stretchr/testify/assert"
 )
+
+// This can be run inside of Docker with:
+// docker run -it --rm -v `pwd`:/go/src/github.com/elastic/go-libaudit \
+//   --pid=host --cap-add=AUDIT_CONTROL golang:1.8.3 /bin/bash
 
 var hexdump = flag.Bool("hexdump", false, "dump kernel responses to stdout in hexdump -C format")
 
@@ -71,6 +76,56 @@ func getStatus(t testing.TB) (*AuditStatus, error) {
 	return c.GetStatus()
 }
 
+func TestDeleteRules(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("must be root to get audit status")
+	}
+
+	var dumper io.WriteCloser
+	if *hexdump {
+		dumper = hex.Dumper(os.Stdout)
+		defer dumper.Close()
+	}
+
+	c, err := NewAuditClient(dumper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	n, err := c.DeleteRules()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%v rules deleted", n)
+}
+
+func TestAddRule(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("must be root to get audit status")
+	}
+
+	var dumper io.WriteCloser
+	if *hexdump {
+		dumper = hex.Dumper(os.Stdout)
+		defer dumper.Close()
+	}
+
+	c, err := NewAuditClient(dumper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	const rule = `BAAAAAIAAAACAAAABAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGsAAABoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAvZXRj`
+	rawRule, _ := base64.StdEncoding.DecodeString(rule)
+
+	if err := c.AddRule(rawRule); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("rule added")
+}
+
 func TestAuditClientGetRules(t *testing.T) {
 	if os.Geteuid() != 0 {
 		t.Skip("must be root to get audit status")
@@ -88,14 +143,13 @@ func TestAuditClientGetRules(t *testing.T) {
 	}
 	defer c.Close()
 
-	rules, err := c.GetRules()
+	rules, err := c.getRules()
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 
 	for _, r := range rules {
 		fmt.Printf("%+v\n", r)
-		rule.PrintRule(r)
 	}
 }
 
