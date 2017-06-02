@@ -28,18 +28,18 @@ const (
 type Field uint32
 
 const (
-	AUIDField     Field = 0x9
-	ArchField     Field = 0xb
-	Arg0Field     Field = 0xc8
-	Arg1Field     Field = 0xc9
-	Arg2Field     Field = 0xca
-	Arg3Field     Field = 0xcb
-	DevMajorField Field = 0x64
-	DevMinorField Field = 0x65
-	DirField      Field = 0x6b
-	EGIDField     Field = 0x6
-	EUIDField     Field = 0x2
-
+	AUIDField            Field = 0x9
+	ArchField            Field = 0xb
+	Arg0Field            Field = 0xc8
+	Arg1Field            Field = 0xc9
+	Arg2Field            Field = 0xca
+	Arg3Field            Field = 0xcb
+	DevMajorField        Field = 0x64
+	DevMinorField        Field = 0x65
+	DirField             Field = 0x6b
+	EGIDField            Field = 0x6
+	EUIDField            Field = 0x2
+	ExeField             Field = 0x70
 	ExitField            Field = 0x67
 	FSGIDField           Field = 0x8
 	FSUIDField           Field = 0x4

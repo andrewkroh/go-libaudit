@@ -372,8 +372,7 @@ func addFilter(rule *Data, lhs, comparator, rhs string) error {
 		}
 		fallthrough
 	case SubjectUserField, SubjectRoleField, SubjectTypeField,
-		SubjectSensitivityField, SubjectClearanceField, KeyField:
-		// ExeField:
+		SubjectSensitivityField, SubjectClearanceField, KeyField, ExeField:
 		// Add string to strings.
 		if field == KeyField && len(rhs) > AUDIT_MAX_KEY_LEN {
 			return errors.Errorf("%v cannot be longer than %v", lhs, AUDIT_MAX_KEY_LEN)
@@ -725,6 +724,7 @@ var fieldsTable = map[string]Field{
 	"dir":          DirField,
 	"egid":         EGIDField,
 	"euid":         EUIDField,
+	"exe":          ExeField,
 	"exit":         ExitField,
 	"fsgid":        FSGIDField,
 	"fsuid":        FSUIDField,

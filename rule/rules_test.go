@@ -311,6 +311,17 @@ func TestAddFilter(t *testing.T) {
 		}
 	})
 
+	t.Run("exe", func(t *testing.T) {
+		const sudo = "/usr/bin/sudo"
+		rule := &Data{}
+		if err := addFilter(rule, "exe", "=", sudo); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, ExeField, rule.fields[0])
+		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, sudo, rule.strings[0])
+	})
+
 	t.Run("arch_b32", func(t *testing.T) {
 		if runtime.GOARCH != "amd64" {
 			t.Skip("arch test expects amd64")

@@ -37,18 +37,18 @@ type Field uint32
 /* Rule fields */
 // Values >= 100 are ONLY useful when checking at syscall exit time (AUDIT_AT_EXIT).
 const (
-	AUIDField     Field = C.AUDIT_LOGINUID
-	ArchField     Field = C.AUDIT_ARCH
-	Arg0Field     Field = C.AUDIT_ARG0
-	Arg1Field     Field = C.AUDIT_ARG1
-	Arg2Field     Field = C.AUDIT_ARG2
-	Arg3Field     Field = C.AUDIT_ARG3
-	DevMajorField Field = C.AUDIT_DEVMAJOR
-	DevMinorField Field = C.AUDIT_DEVMINOR
-	DirField      Field = C.AUDIT_DIR
-	EGIDField     Field = C.AUDIT_EGID
-	EUIDField     Field = C.AUDIT_EUID
-	//ExeField			    Field = C.AUDIT_EXE   // Added in v4.3.
+	AUIDField            Field = C.AUDIT_LOGINUID
+	ArchField            Field = C.AUDIT_ARCH
+	Arg0Field            Field = C.AUDIT_ARG0
+	Arg1Field            Field = C.AUDIT_ARG1
+	Arg2Field            Field = C.AUDIT_ARG2
+	Arg3Field            Field = C.AUDIT_ARG3
+	DevMajorField        Field = C.AUDIT_DEVMAJOR
+	DevMinorField        Field = C.AUDIT_DEVMINOR
+	DirField             Field = C.AUDIT_DIR
+	EGIDField            Field = C.AUDIT_EGID
+	EUIDField            Field = C.AUDIT_EUID
+	ExeField             Field = C.AUDIT_EXE // Added in v4.3.
 	ExitField            Field = C.AUDIT_EXIT
 	FSGIDField           Field = C.AUDIT_FSGID
 	FSUIDField           Field = C.AUDIT_FSUID
