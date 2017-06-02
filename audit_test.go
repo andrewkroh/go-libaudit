@@ -36,6 +36,7 @@ import (
 //   --pid=host --cap-add=AUDIT_CONTROL golang:1.8.3 /bin/bash
 
 var hexdump = flag.Bool("hexdump", false, "dump kernel responses to stdout in hexdump -C format")
+var list = flag.Bool("l", false, "dump rules")
 
 func TestAuditClientGetStatus(t *testing.T) {
 	if os.Geteuid() != 0 {
@@ -100,6 +101,39 @@ func TestDeleteRules(t *testing.T) {
 	t.Logf("%v rules deleted", n)
 }
 
+func TestListRules(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("must be root to list rules")
+	}
+
+	if !*list {
+		t.SkipNow()
+	}
+
+	var dumper io.WriteCloser
+	if *hexdump {
+		dumper = hex.Dumper(os.Stdout)
+		defer dumper.Close()
+	}
+
+	c, err := NewAuditClient(dumper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	rules, err := c.GetRules()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, rule := range rules {
+		b64 := base64.StdEncoding.EncodeToString(rule)
+		fmt.Printf("rule %v: %v\n\n", i, b64)
+		fmt.Println(hex.Dump(rule))
+	}
+}
+
 func TestAddRule(t *testing.T) {
 	if os.Geteuid() != 0 {
 		t.Skip("must be root to get audit status")
@@ -143,7 +177,7 @@ func TestAuditClientGetRules(t *testing.T) {
 	}
 	defer c.Close()
 
-	rules, err := c.getRules()
+	rules, err := c.GetRules()
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

@@ -99,6 +99,23 @@ func TestParseRule(t *testing.T) {
 				},
 			},
 		},
+		{
+			"-a exit,always -F auid>=1000",
+			&RuleFlagSet{
+				Type: AppendSyscallRuleType,
+				Append: AddFlag{
+					Action: "always",
+					List:   "exit",
+				},
+				Filter: []FilterFlag{
+					{
+						LHS:        "auid",
+						Comparator: ">=",
+						RHS:        "1000",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {

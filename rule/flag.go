@@ -115,7 +115,7 @@ type FilterFlag struct {
 	RHS        string
 }
 
-var filterRegexp = regexp.MustCompile(`(\S+)\s*(=|!=|<|>|<=|>=|&|&=)(\S+)`)
+var filterRegexp = regexp.MustCompile(`(\w+)\s*(<=|>=|&=|=|!=|<|>|&)(\S+)`)
 
 func (f *FilterFlag) Set(value string) error {
 	values := filterRegexp.FindStringSubmatch(value)

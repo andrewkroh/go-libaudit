@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"fmt"
 	"io/ioutil"
 	"math"
 	"os/user"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+
+	"path/filepath"
 
 	"github.com/elastic/go-libaudit/auparse"
 	"github.com/stretchr/testify/assert"
@@ -25,24 +28,43 @@ type RuleTest struct {
 }
 
 func TestBuildAuditRule(t *testing.T) {
-	testdata, err := ioutil.ReadFile("testdata/rule_data.yml")
+	goldenFiles, err := filepath.Glob("testdata/*.rules.golden.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var tests TestData
-	if err := yaml.Unmarshal(testdata, &tests); err != nil {
-		t.Fatal(err)
+	for _, file := range goldenFiles {
+		testRulesFromGoldenFile(t, file)
 	}
+}
 
-	for i, test := range tests.Rules {
-		actualBytes, err := BuildAuditRule(test.Flags)
+func testRulesFromGoldenFile(t *testing.T, file string) {
+	t.Run(filepath.Base(file), func(t *testing.T) {
+		testdata, err := ioutil.ReadFile(file)
 		if err != nil {
-			t.Error("rule", test.Flags, "error:", err)
+			t.Fatal(err)
 		}
 
-		assert.Equal(t, []byte(test.Bytes), actualBytes, "failed on rule %v: %v", i, test.Flags)
-	}
+		var tests TestData
+		if err := yaml.Unmarshal(testdata, &tests); err != nil {
+			t.Fatal(err)
+		}
+
+		for i, test := range tests.Rules {
+			t.Run(fmt.Sprintf("rule %d", i), func(t *testing.T) {
+				if testing.Verbose() {
+					t.Log("rule:", test.Flags)
+				}
+
+				actualBytes, err := BuildAuditRule(test.Flags)
+				if err != nil {
+					t.Fatal("rule:", test.Flags, "error:", err)
+				}
+
+				assert.Equal(t, []byte(test.Bytes), actualBytes, "rule: %v", test.Flags)
+			})
+		}
+	})
 }
 
 func TestAddFlag(t *testing.T) {

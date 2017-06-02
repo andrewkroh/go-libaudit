@@ -129,7 +129,7 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	return replyStatus, nil
 }
 
-func (c *AuditClient) getRules() ([][]byte, error) {
+func (c *AuditClient) GetRules() ([][]byte, error) {
 	msg := syscall.NetlinkMessage{
 		Header: syscall.NlMsghdr{
 			Type:  uint16(auparse.AUDIT_LIST_RULES),
@@ -179,14 +179,16 @@ func (c *AuditClient) getRules() ([][]byte, error) {
 			return nil, errors.Errorf("unexpected message type %d while receiving rules", reply.Header.Type)
 		}
 
-		rules = append(rules, reply.Data)
+		rule := make([]byte, len(reply.Data))
+		copy(rule, reply.Data)
+		rules = append(rules, rule)
 	}
 
 	return rules, nil
 }
 
 func (c *AuditClient) DeleteRules() (int, error) {
-	rules, err := c.getRules()
+	rules, err := c.GetRules()
 	if err != nil {
 		return 0, err
 	}

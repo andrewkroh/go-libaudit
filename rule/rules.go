@@ -52,6 +52,12 @@ func (r AuditRuleData) toWireFormat() []byte {
 	binary.Write(out, binary.LittleEndian, r.FieldFlags)
 	binary.Write(out, binary.LittleEndian, r.BufLen)
 	out.Write(r.Buf)
+
+	// Adding padding.
+	if out.Len()%4 > 0 {
+		out.Write(make([]byte, 4-(out.Len()%4)))
+	}
+
 	return out.Bytes()
 }
 
@@ -110,7 +116,7 @@ func Create(flags string) (*Data, error) {
 		return nil, errors.Wrap(err, "failed to parse rule")
 	}
 
-	rule := &Data{}
+	rule := &Data{allSyscalls: true}
 	switch flagSet.Type {
 	case AppendSyscallRuleType:
 		if err = addFlag(rule, flagSet.Append.List); err != nil {
@@ -132,12 +138,6 @@ func Create(flags string) (*Data, error) {
 		return nil, errors.New("delete all is not a rule type")
 	}
 
-	for _, syscall := range flagSet.Syscall {
-		if err = addSyscall(rule, syscall); err != nil {
-			return nil, errors.Wrapf(err, "failed to add syscall '%v'", syscall)
-		}
-	}
-
 	for _, filter := range flagSet.Filter {
 		if err = addFilter(rule, filter.LHS, filter.Comparator, filter.RHS); err != nil {
 			return nil, errors.Wrapf(err, "failed to add filter '%v'", filter)
@@ -147,6 +147,12 @@ func Create(flags string) (*Data, error) {
 	for _, compare := range flagSet.Comparison {
 		if err = addInterFieldComparator(rule, compare.LHS, compare.Comparator, compare.RHS); err != nil {
 			return nil, errors.Wrapf(err, "failed to add interfield comparison '%v'", flagSet.Comparison)
+		}
+	}
+
+	for _, syscall := range flagSet.Syscall {
+		if err = addSyscall(rule, syscall); err != nil {
+			return nil, errors.Wrapf(err, "failed to add syscall '%v'", syscall)
 		}
 	}
 
@@ -172,6 +178,8 @@ type Data struct {
 	fieldFlags []Operator
 
 	strings []string
+
+	arch string
 }
 
 func (d Data) BuildRule() (*AuditRuleData, error) {
@@ -183,7 +191,7 @@ func (d Data) BuildRule() (*AuditRuleData, error) {
 
 	if d.allSyscalls {
 		for i := range rule.Mask {
-			rule.Mask[i] = 0xFFFF
+			rule.Mask[i] = 0xFFFFFFFF
 		}
 	} else {
 		for _, syscallNum := range d.syscalls {
@@ -264,6 +272,8 @@ func addSyscall(rule *Data, syscall string) error {
 	if syscall == "all" {
 		rule.allSyscalls = true
 		return nil
+	} else {
+		rule.allSyscalls = false
 	}
 
 	syscallNum, err := strconv.Atoi(syscall)
@@ -272,12 +282,15 @@ func addSyscall(rule *Data, syscall string) error {
 			return errors.Wrapf(err, "failed to parse syscall number '%v'", syscall)
 		}
 
-		// Convert name to number.
-		arch, err := getRuntimeArch()
-		if err != nil {
-			return errors.Wrap(err, "failed to add syscall")
+		arch := rule.arch
+		if arch == "" {
+			arch, err = getRuntimeArch()
+			if err != nil {
+				return errors.Wrap(err, "failed to add syscall")
+			}
 		}
 
+		// Convert name to number.
 		table, found := ReverseSyscall[arch]
 		if !found {
 			return errors.Errorf("syscall table not found for arch %v", arch)
@@ -376,11 +389,12 @@ func addFilter(rule *Data, lhs, comparator, rhs string) error {
 			return errors.Errorf("arch only supports the = and != operators")
 		}
 		// Or convert name to arch or validate given arch.
-		arch, err := getArch(rhs)
+		archName, arch, err := getArch(rhs)
 		if err != nil {
 			return err
 		}
 		rule.values = append(rule.values, arch)
+		rule.arch = archName
 	case PermField:
 		// Perm is only valid for exit.
 		if rule.flags != FilterExit {
@@ -449,6 +463,10 @@ func addFilter(rule *Data, lhs, comparator, rhs string) error {
 }
 
 func getUID(uid string) (uint32, error) {
+	if uid == "unset" || uid == "-1" {
+		return 4294967295, nil
+	}
+
 	v, err := strconv.ParseUint(uid, 10, 32)
 	if nerr, ok := err.(*strconv.NumError); ok {
 		if nerr.Err != strconv.ErrSyntax {
@@ -514,25 +532,25 @@ func getExitCode(exit string) (int32, error) {
 	return int32(v), nil
 }
 
-func getArch(arch string) (uint32, error) {
+func getArch(arch string) (string, uint32, error) {
 	var realArch = arch
 	switch strings.ToLower(arch) {
 	case "b64":
 		runtimeArch, err := getRuntimeArch()
 		if err != nil {
-			return 0, err
+			return "", 0, err
 		}
 
 		switch runtimeArch {
 		case "aarch64", "x86_64", "ppc":
 			realArch = runtimeArch
 		default:
-			return 0, errors.Errorf("cannot use b64 on %v", runtimeArch)
+			return "", 0, errors.Errorf("cannot use b64 on %v", runtimeArch)
 		}
 	case "b32":
 		runtimeArch, err := getRuntimeArch()
 		if err != nil {
-			return 0, err
+			return "", 0, err
 		}
 
 		switch runtimeArch {
@@ -543,15 +561,15 @@ func getArch(arch string) (uint32, error) {
 		case "x86_64":
 			realArch = "i386"
 		default:
-			return 0, errors.Errorf("cannot use b32 on %v", runtimeArch)
+			return "", 0, errors.Errorf("cannot use b32 on %v", runtimeArch)
 		}
 	}
 
 	archValue, found := ReverseArch[realArch]
 	if !found {
-		return 0, errors.Errorf("unknown arch '%v'", arch)
+		return "", 0, errors.Errorf("unknown arch '%v'", arch)
 	}
-	return archValue, nil
+	return realArch, archValue, nil
 }
 
 // getRuntimeArch returns the programs arch (not the machines arch).
