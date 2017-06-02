@@ -61,6 +61,7 @@ func testRulesFromGoldenFile(t *testing.T, file string) {
 					t.Fatal("rule:", test.Flags, "error:", err)
 				}
 
+				//fmt.Println(hex.Dump([]byte(test.Bytes)))
 				assert.Equal(t, []byte(test.Bytes), actualBytes, "rule: %v", test.Flags)
 			})
 		}
@@ -374,5 +375,17 @@ func TestAddFilter(t *testing.T) {
 		assert.EqualValues(t, Arg3Field, rule.fields[0])
 		assert.EqualValues(t, EqualOperator, rule.fieldFlags[0])
 		assert.EqualValues(t, math.MinInt32, rule.values[0])
+	})
+}
+
+func TestAddInterFieldComparator(t *testing.T) {
+	t.Run("auid!=obj_uid", func(t *testing.T) {
+		rule := &Data{}
+		if err := addInterFieldComparator(rule, "auid", "!=", "obj_uid"); err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, FieldCompare, rule.fields[0])
+		assert.EqualValues(t, NotEqualOperator, rule.fieldFlags[0])
+		assert.EqualValues(t, AUDIT_COMPARE_AUID_TO_OBJ_UID, rule.values[0])
 	})
 }

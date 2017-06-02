@@ -190,7 +190,7 @@ func (d Data) BuildRule() (*AuditRuleData, error) {
 	}
 
 	if d.allSyscalls {
-		for i := range rule.Mask {
+		for i := 0; i < len(rule.Mask)-1; i++ {
 			rule.Mask[i] = 0xFFFFFFFF
 		}
 	} else {
@@ -509,7 +509,7 @@ func getGID(gid string) (uint32, error) {
 }
 
 func getExitCode(exit string) (int32, error) {
-	v, err := strconv.ParseInt(exit, 10, 32)
+	v, err := strconv.ParseInt(exit, 0, 32)
 	if nerr, ok := err.(*strconv.NumError); ok {
 		if nerr.Err != strconv.ErrSyntax {
 			return 0, errors.Wrapf(err, "failed to parse exit code '%v'", exit)
@@ -596,7 +596,7 @@ func getRuntimeArch() (string, error) {
 }
 
 func getAuditMsgType(msgType string) (uint32, error) {
-	v, err := strconv.ParseUint(msgType, 10, 32)
+	v, err := strconv.ParseUint(msgType, 0, 32)
 	if nerr, ok := err.(*strconv.NumError); ok {
 		if nerr.Err != strconv.ErrSyntax {
 			return 0, errors.Wrapf(err, "failed to parse msgtype '%v'", msgType)
@@ -655,10 +655,10 @@ func getFiletype(filetype string) (Filetype, error) {
 
 func ParseNum(num string) (uint32, error) {
 	if strings.HasPrefix(num, "-") {
-		v, err := strconv.ParseInt(num, 10, 32)
+		v, err := strconv.ParseInt(num, 0, 32)
 		return uint32(v), err
 	} else {
-		v, err := strconv.ParseUint(num, 10, 32)
+		v, err := strconv.ParseUint(num, 0, 32)
 		return uint32(v), err
 	}
 }
@@ -680,7 +680,7 @@ func addInterFieldComparator(rule *Data, lhs, comparator, rhs string) error {
 		return errors.Errorf("invalid field '%v' on left", lhs)
 	}
 
-	rightField, found := fieldsTable[lhs]
+	rightField, found := fieldsTable[rhs]
 	if !found {
 		return errors.Errorf("invalid field '%v' on right", lhs)
 	}
