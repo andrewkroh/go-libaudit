@@ -139,18 +139,19 @@ func Create(flags string) (*Data, error) {
 	}
 
 	for _, filter := range flagSet.Filters {
-		if filter.Type == ValueFilter {
+		switch filter.Type {
+		case ValueFilterFlagType:
 			if err = addFilter(rule, filter.LHS, filter.Comparator, filter.RHS); err != nil {
 				return nil, errors.Wrapf(err, "failed to add filter '%v'", filter)
 			}
-		} else if filter.Type == InterFieldFilter {
+		case InterFieldFilterFlagType:
 			if err = addInterFieldComparator(rule, filter.LHS, filter.Comparator, filter.RHS); err != nil {
 				return nil, errors.Wrapf(err, "failed to add interfield comparison '%v'", filter)
 			}
 		}
 	}
 
-	for _, syscall := range flagSet.Syscall {
+	for _, syscall := range flagSet.Syscalls {
 		if err = addSyscall(rule, syscall); err != nil {
 			return nil, errors.Wrapf(err, "failed to add syscall '%v'", syscall)
 		}

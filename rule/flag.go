@@ -10,6 +10,113 @@ import (
 	"strings"
 )
 
+type FilterFlagType uint8
+
+const (
+	InterFieldFilterFlagType FilterFlagType = iota + 1
+	ValueFilterFlagType
+)
+
+// --- FilterFlag ---
+
+type FilterFlag struct {
+	Type       FilterFlagType
+	LHS        string
+	Comparator string
+	RHS        string
+}
+
+func (f *FilterFlag) String() string {
+	return fmt.Sprintf("%v %v %v", f.LHS, f.Comparator, f.RHS)
+}
+
+// --- FilterList ----
+
+type FilterList []FilterFlag
+
+func (l FilterList) String() string {
+	buf := new(bytes.Buffer)
+	buf.WriteString("[")
+	for i, v := range l {
+		buf.WriteString(v.String())
+		if i > len(l)-1 {
+			buf.WriteString(", ")
+		}
+	}
+	buf.WriteString("]")
+	return buf.String()
+}
+
+// --- InterFieldFilter ---
+
+type interFieldFilter FilterFlag
+
+var comparisonRegexp = regexp.MustCompile(`(\w+)\s*(!?=)(\w+)`)
+
+func (f *interFieldFilter) Set(value string) error {
+	values := comparisonRegexp.FindStringSubmatch(value)
+	if len(values) != 4 {
+		return fmt.Errorf("invalid comparison: '%v'", value)
+	}
+
+	f.Type = InterFieldFilterFlagType
+	f.LHS = values[1]
+	f.Comparator = values[2]
+	f.RHS = values[3]
+	return nil
+}
+
+// --- ValueFilterFlag ---
+
+type valueFilterFlag FilterFlag
+
+var filterRegexp = regexp.MustCompile(`(\w+)\s*(<=|>=|&=|=|!=|<|>|&)(\S+)`)
+
+func (f *valueFilterFlag) Set(value string) error {
+	values := filterRegexp.FindStringSubmatch(value)
+	if len(values) != 4 {
+		return fmt.Errorf("invalid filter: '%v'", value)
+	}
+
+	f.Type = ValueFilterFlagType
+	f.LHS = values[1]
+	f.Comparator = values[2]
+	f.RHS = values[3]
+	return nil
+}
+
+// --- InterFieldFilterList ----
+
+type interFieldFilterList FilterList
+
+func (l interFieldFilterList) String() string { return FilterList(l).String() }
+
+func (l *interFieldFilterList) Set(value string) error {
+	comparisonFlag := &interFieldFilter{}
+	if err := comparisonFlag.Set(value); err != nil {
+		return err
+	}
+	*l = append(*l, FilterFlag(*comparisonFlag))
+	return nil
+}
+
+// --- ValueFilterList ----
+
+type valueFilterList FilterList
+
+func (l valueFilterList) String() string { return FilterList(l).String() }
+
+func (l *valueFilterList) Set(value string) error {
+	filterFlag := &valueFilterFlag{}
+	if err := filterFlag.Set(value); err != nil {
+		return err
+	}
+	*l = append(*l, FilterFlag(*filterFlag))
+	return nil
+}
+
+// --- StringList ---
+
 // StringList is a flag type for usage when the parameter has an arity > 1.
 type StringList []string
 
@@ -24,6 +131,8 @@ func (l *StringList) Set(value string) error {
 	}
 	return nil
 }
+
+// --- AddFlag ---
 
 // AddFlag is a flag type for appending or prepending a rule.
 type AddFlag struct {
@@ -61,57 +170,7 @@ func (f *AddFlag) String() string {
 	return fmt.Sprintf("%v,%v", f.List, f.Action)
 }
 
-type ComparisonFlag FilterFlag
-
-var comparisonRegexp = regexp.MustCompile(`(\w+)\s*(!?=)(\w+)`)
-
-func (f *ComparisonFlag) Set(value string) error {
-	values := comparisonRegexp.FindStringSubmatch(value)
-	if len(values) != 4 {
-		return fmt.Errorf("invalid comparison: '%v'", value)
-	}
-
-	f.LHS = values[1]
-	f.Comparator = values[2]
-	f.RHS = values[3]
-	return nil
-}
-
-func (f *ComparisonFlag) String() string {
-	return fmt.Sprintf("%v %v %v", f.LHS, f.Comparator, f.RHS)
-}
-
-type FilterFlagType uint8
-
-const (
-	InterFieldFilter FilterFlagType = iota + 1
-	ValueFilter
-)
-
-type FilterFlag struct {
-	Type       FilterFlagType
-	LHS        string
-	Comparator string
-	RHS        string
-}
-
-var filterRegexp = regexp.MustCompile(`(\w+)\s*(<=|>=|&=|=|!=|<|>|&)(\S+)`)
-
-func (f *FilterFlag) Set(value string) error {
-	values := filterRegexp.FindStringSubmatch(value)
-	if len(values) != 4 {
-		return fmt.Errorf("invalid filter: '%v'", value)
-	}
-
-	f.LHS = values[1]
-	f.Comparator = values[2]
-	f.RHS = values[3]
-	return nil
-}
-
-func (f *FilterFlag) String() string {
-	return fmt.Sprintf("%v %v %v", f.LHS, f.Comparator, f.RHS)
-}
+// --- FileAccessTypeFlag ---
 
 type AccessType uint8
 
@@ -137,21 +196,19 @@ func (t AccessType) String() string {
 	return "unknown"
 }
 
-type FileAccessTypeFlag struct {
-	Flags []AccessType
-}
+type FileAccessTypeFlags []AccessType
 
-func (f *FileAccessTypeFlag) Set(value string) error {
+func (f *FileAccessTypeFlags) Set(value string) error {
 	for _, v := range []byte(value) {
 		switch v {
 		case 'r':
-			f.Flags = append(f.Flags, ReadAccessType)
+			*f = append(*f, ReadAccessType)
 		case 'w':
-			f.Flags = append(f.Flags, WriteAccessType)
+			*f = append(*f, WriteAccessType)
 		case 'x':
-			f.Flags = append(f.Flags, ExecuteAccessType)
+			*f = append(*f, ExecuteAccessType)
 		case 'a':
-			f.Flags = append(f.Flags, AttributeChangeAccessType)
+			*f = append(*f, AttributeChangeAccessType)
 		default:
 			return fmt.Errorf("invalid file access type: '%v'", string(v))
 		}
@@ -159,13 +216,15 @@ func (f *FileAccessTypeFlag) Set(value string) error {
 	return nil
 }
 
-func (f *FileAccessTypeFlag) String() string {
-	flags := make([]string, 0, len(f.Flags))
-	for _, accessType := range f.Flags {
+func (f FileAccessTypeFlags) String() string {
+	flags := make([]string, 0, len(f))
+	for _, accessType := range f {
 		flags = append(flags, accessType.String())
 	}
 	return "[" + strings.Join(flags, "|") + "]"
 }
+
+// --- RuleFlagSet ---
 
 type RuleType int
 
@@ -182,59 +241,18 @@ type RuleFlagSet struct {
 	DeleteAll bool // [-D] Delete all rules.
 
 	// Audit Rule
-	Prepend AddFlag    // -A Prepend rule (list,action) or (action,list).
-	Append  AddFlag    // -a Append rule (list,action) or (action,list).
-	Filters FilterList // -F [n=v | n!=v | n<v | n>v | n<=v | n>=v | n&v | n&=v]
-	Syscall StringList // -S Syscall name or number or "all". Value can be comma-separated.
+	Prepend  AddFlag    // -A Prepend rule (list,action) or (action,list).
+	Append   AddFlag    // -a Append rule (list,action) or (action,list).
+	Filters  FilterList // -F [n=v | n!=v | n<v | n>v | n<=v | n>=v | n&v | n&=v] OR -C [n=v | n!=v]
+	Syscalls StringList // -S Syscall name or number or "all". Value can be comma-separated.
 
 	// Filepath watch (can be done more expressively using syscalls)
-	Path        string             // -w Path for filesystem watch (no wildcards).
-	Permissions FileAccessTypeFlag // -p [r|w|x|a] Permission filter.
+	Path        string              // -w Path for filesystem watch (no wildcards).
+	Permissions FileAccessTypeFlags // -p [r|w|x|a] Permission filter.
 
-	Key StringList // -k (max 31 bytes) Key(s) to associate with the rule.
+	Key StringList // -k Key(s) to associate with the rule.
 
 	flagSet *flag.FlagSet
-}
-
-type FilterList []FilterFlag
-
-func (l FilterList) String() string {
-	buf := new(bytes.Buffer)
-	buf.WriteString("[")
-	for i, v := range l {
-		buf.WriteString(v.String())
-		if i > len(l)-1 {
-			buf.WriteString(", ")
-		}
-	}
-	buf.WriteString("]")
-	return buf.String()
-}
-
-type InterFieldFilterList FilterList
-
-func (l InterFieldFilterList) String() string { return FilterList(l).String() }
-
-func (l *InterFieldFilterList) Set(value string) error {
-	comparisonFlag := &ComparisonFlag{Type: InterFieldFilter}
-	if err := comparisonFlag.Set(value); err != nil {
-		return err
-	}
-	*l = append(*l, FilterFlag(*comparisonFlag))
-	return nil
-}
-
-type ValueFilterList FilterList
-
-func (l ValueFilterList) String() string { return FilterList(l).String() }
-
-func (l *ValueFilterList) Set(value string) error {
-	filterFlag := &FilterFlag{Type: ValueFilter}
-	if err := filterFlag.Set(value); err != nil {
-		return err
-	}
-	*l = append(*l, *filterFlag)
-	return nil
 }
 
 func newRuleFlagSet() *RuleFlagSet {
@@ -246,9 +264,9 @@ func newRuleFlagSet() *RuleFlagSet {
 	rule.flagSet.BoolVar(&rule.DeleteAll, "D", false, "delete all")
 	rule.flagSet.Var(&rule.Append, "a", "append rule")
 	rule.flagSet.Var(&rule.Prepend, "A", "prepend rule")
-	rule.flagSet.Var((*InterFieldFilterList)(&rule.Filters), "C", "comparison filter")
-	rule.flagSet.Var((*ValueFilterList)(&rule.Filters), "F", "filter")
-	rule.flagSet.Var(&rule.Syscall, "S", "syscall name, number, or 'all'")
+	rule.flagSet.Var((*interFieldFilterList)(&rule.Filters), "C", "comparison filter")
+	rule.flagSet.Var((*valueFilterList)(&rule.Filters), "F", "filter")
+	rule.flagSet.Var(&rule.Syscalls, "S", "syscall name, number, or 'all'")
 	rule.flagSet.Var(&rule.Permissions, "p", "access type - r=read, w=write, x=execute, a=attribute change")
 	rule.flagSet.StringVar(&rule.Path, "w", "", "path to watch, no wildcards")
 	rule.flagSet.Var(&rule.Key, "k", "key")
@@ -262,18 +280,6 @@ func (r *RuleFlagSet) Usage() string {
 	r.flagSet.Usage()
 	r.flagSet.SetOutput(ioutil.Discard)
 	return buf.String()
-}
-
-func ParseRule(args string) (*RuleFlagSet, error) {
-	rule := newRuleFlagSet()
-	if err := rule.flagSet.Parse(strings.Fields(args)); err != nil {
-		return nil, err
-	}
-	if err := rule.validate(); err != nil {
-		return nil, err
-	}
-
-	return rule, nil
 }
 
 func (r *RuleFlagSet) validate() error {
@@ -336,4 +342,36 @@ func (r *RuleFlagSet) validate() error {
 	}
 
 	return nil
+}
+
+func ParseRule(args string) (*RuleFlagSet, error) {
+	rule := newRuleFlagSet()
+	if err := rule.flagSet.Parse(strings.Fields(args)); err != nil {
+		return nil, err
+	}
+	if err := rule.validate(); err != nil {
+		return nil, err
+	}
+
+	return rule, nil
+}
+
+type Rule struct {
+	Type RuleType
+}
+
+type DeleteAllRule Rule
+
+type FileWatchRule struct {
+	Rule
+	Path        string
+	Permissions []AccessType
+	Keys        []string
+}
+
+type SyscallRule struct {
+	Rule
+	Filters  []FilterFlag
+	Syscalls []string
+	Keys     []string
 }

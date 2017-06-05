@@ -16,7 +16,7 @@ func TestParseRule(t *testing.T) {
 			&RuleFlagSet{
 				Type:        FileWatchRuleType,
 				Path:        "/etc/shadow",
-				Permissions: FileAccessTypeFlag{[]AccessType{WriteAccessType, AttributeChangeAccessType}},
+				Permissions: []AccessType{WriteAccessType, AttributeChangeAccessType},
 				Key:         []string{"identity"},
 			},
 		},
@@ -28,7 +28,7 @@ func TestParseRule(t *testing.T) {
 			&RuleFlagSet{
 				Type:        FileWatchRuleType,
 				Path:        "/etc/shadow",
-				Permissions: FileAccessTypeFlag{[]AccessType{WriteAccessType, AttributeChangeAccessType}},
+				Permissions: []AccessType{WriteAccessType, AttributeChangeAccessType},
 				Key:         []string{"identity", "users"},
 			},
 		},
@@ -42,13 +42,13 @@ func TestParseRule(t *testing.T) {
 				},
 				Filters: []FilterFlag{
 					{
-						Type:       ValueFilter,
+						Type:       ValueFilterFlagType,
 						LHS:        "path",
 						Comparator: "=",
 						RHS:        "/etc/shadow",
 					},
 					{
-						Type:       ValueFilter,
+						Type:       ValueFilterFlagType,
 						LHS:        "perm",
 						Comparator: "=",
 						RHS:        "wa",
@@ -94,7 +94,7 @@ func TestParseRule(t *testing.T) {
 				},
 				Filters: []FilterFlag{
 					{
-						Type:       InterFieldFilter,
+						Type:       InterFieldFilterFlagType,
 						LHS:        "auid",
 						Comparator: "!=",
 						RHS:        "uid",
@@ -112,7 +112,7 @@ func TestParseRule(t *testing.T) {
 				},
 				Filters: []FilterFlag{
 					{
-						Type:       ValueFilter,
+						Type:       ValueFilterFlagType,
 						LHS:        "auid",
 						Comparator: ">=",
 						RHS:        "1000",
