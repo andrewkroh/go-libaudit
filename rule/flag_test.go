@@ -40,13 +40,15 @@ func TestParseRule(t *testing.T) {
 					Action: "always",
 					List:   "exit",
 				},
-				Filter: []FilterFlag{
+				Filters: []FilterFlag{
 					{
+						Type:       ValueFilter,
 						LHS:        "path",
 						Comparator: "=",
 						RHS:        "/etc/shadow",
 					},
 					{
+						Type:       ValueFilter,
 						LHS:        "perm",
 						Comparator: "=",
 						RHS:        "wa",
@@ -90,8 +92,9 @@ func TestParseRule(t *testing.T) {
 					Action: "always",
 					List:   "exit",
 				},
-				Comparison: []ComparisonFlag{
+				Filters: []FilterFlag{
 					{
+						Type:       InterFieldFilter,
 						LHS:        "auid",
 						Comparator: "!=",
 						RHS:        "uid",
@@ -107,8 +110,9 @@ func TestParseRule(t *testing.T) {
 					Action: "always",
 					List:   "exit",
 				},
-				Filter: []FilterFlag{
+				Filters: []FilterFlag{
 					{
+						Type:       ValueFilter,
 						LHS:        "auid",
 						Comparator: ">=",
 						RHS:        "1000",

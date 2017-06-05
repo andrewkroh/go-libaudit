@@ -138,15 +138,15 @@ func Create(flags string) (*Data, error) {
 		return nil, errors.New("delete all is not a rule type")
 	}
 
-	for _, filter := range flagSet.Filter {
-		if err = addFilter(rule, filter.LHS, filter.Comparator, filter.RHS); err != nil {
-			return nil, errors.Wrapf(err, "failed to add filter '%v'", filter)
-		}
-	}
-
-	for _, compare := range flagSet.Comparison {
-		if err = addInterFieldComparator(rule, compare.LHS, compare.Comparator, compare.RHS); err != nil {
-			return nil, errors.Wrapf(err, "failed to add interfield comparison '%v'", flagSet.Comparison)
+	for _, filter := range flagSet.Filters {
+		if filter.Type == ValueFilter {
+			if err = addFilter(rule, filter.LHS, filter.Comparator, filter.RHS); err != nil {
+				return nil, errors.Wrapf(err, "failed to add filter '%v'", filter)
+			}
+		} else if filter.Type == InterFieldFilter {
+			if err = addInterFieldComparator(rule, filter.LHS, filter.Comparator, filter.RHS); err != nil {
+				return nil, errors.Wrapf(err, "failed to add interfield comparison '%v'", filter)
+			}
 		}
 	}
 

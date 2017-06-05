@@ -61,11 +61,7 @@ func (f *AddFlag) String() string {
 	return fmt.Sprintf("%v,%v", f.List, f.Action)
 }
 
-type ComparisonFlag struct {
-	LHS        string
-	Comparator string
-	RHS        string
-}
+type ComparisonFlag FilterFlag
 
 var comparisonRegexp = regexp.MustCompile(`(\w+)\s*(!?=)(\w+)`)
 
@@ -85,31 +81,15 @@ func (f *ComparisonFlag) String() string {
 	return fmt.Sprintf("%v %v %v", f.LHS, f.Comparator, f.RHS)
 }
 
-type ComparisonFlagList []ComparisonFlag
+type FilterFlagType uint8
 
-func (l *ComparisonFlagList) Set(value string) error {
-	comparisonFlag := &ComparisonFlag{}
-	if err := comparisonFlag.Set(value); err != nil {
-		return err
-	}
-	*l = append(*l, *comparisonFlag)
-	return nil
-}
-
-func (l *ComparisonFlagList) String() string {
-	buf := new(bytes.Buffer)
-	buf.WriteString("[")
-	for i, v := range *l {
-		buf.WriteString(v.String())
-		if i > len(*l)-1 {
-			buf.WriteString(", ")
-		}
-	}
-	buf.WriteString("]")
-	return buf.String()
-}
+const (
+	InterFieldFilter FilterFlagType = iota + 1
+	ValueFilter
+)
 
 type FilterFlag struct {
+	Type       FilterFlagType
 	LHS        string
 	Comparator string
 	RHS        string
@@ -131,30 +111,6 @@ func (f *FilterFlag) Set(value string) error {
 
 func (f *FilterFlag) String() string {
 	return fmt.Sprintf("%v %v %v", f.LHS, f.Comparator, f.RHS)
-}
-
-type FilterFlagList []FilterFlag
-
-func (l *FilterFlagList) String() string {
-	buf := new(bytes.Buffer)
-	buf.WriteString("[")
-	for i, v := range *l {
-		buf.WriteString(v.String())
-		if i > len(*l)-1 {
-			buf.WriteString(", ")
-		}
-	}
-	buf.WriteString("]")
-	return buf.String()
-}
-
-func (l *FilterFlagList) Set(value string) error {
-	filterFlag := &FilterFlag{}
-	if err := filterFlag.Set(value); err != nil {
-		return err
-	}
-	*l = append(*l, *filterFlag)
-	return nil
 }
 
 type AccessType uint8
@@ -226,11 +182,10 @@ type RuleFlagSet struct {
 	DeleteAll bool // [-D] Delete all rules.
 
 	// Audit Rule
-	Prepend    AddFlag            // -A Prepend rule (list,action) or (action,list).
-	Append     AddFlag            // -a Append rule (list,action) or (action,list).
-	Comparison ComparisonFlagList // -C [f=f | f!=f] Comparison filter.
-	Filter     FilterFlagList     // -F [n=v | n!=v | n<v | n>v | n<=v | n>=v | n&v | n&=v]
-	Syscall    StringList         // -S Syscall name or number or "all". Value can be comma-separated.
+	Prepend AddFlag    // -A Prepend rule (list,action) or (action,list).
+	Append  AddFlag    // -a Append rule (list,action) or (action,list).
+	Filters FilterList // -F [n=v | n!=v | n<v | n>v | n<=v | n>=v | n&v | n&=v]
+	Syscall StringList // -S Syscall name or number or "all". Value can be comma-separated.
 
 	// Filepath watch (can be done more expressively using syscalls)
 	Path        string             // -w Path for filesystem watch (no wildcards).
@@ -239,6 +194,47 @@ type RuleFlagSet struct {
 	Key StringList // -k (max 31 bytes) Key(s) to associate with the rule.
 
 	flagSet *flag.FlagSet
+}
+
+type FilterList []FilterFlag
+
+func (l FilterList) String() string {
+	buf := new(bytes.Buffer)
+	buf.WriteString("[")
+	for i, v := range l {
+		buf.WriteString(v.String())
+		if i > len(l)-1 {
+			buf.WriteString(", ")
+		}
+	}
+	buf.WriteString("]")
+	return buf.String()
+}
+
+type InterFieldFilterList FilterList
+
+func (l InterFieldFilterList) String() string { return FilterList(l).String() }
+
+func (l *InterFieldFilterList) Set(value string) error {
+	comparisonFlag := &ComparisonFlag{Type: InterFieldFilter}
+	if err := comparisonFlag.Set(value); err != nil {
+		return err
+	}
+	*l = append(*l, FilterFlag(*comparisonFlag))
+	return nil
+}
+
+type ValueFilterList FilterList
+
+func (l ValueFilterList) String() string { return FilterList(l).String() }
+
+func (l *ValueFilterList) Set(value string) error {
+	filterFlag := &FilterFlag{Type: ValueFilter}
+	if err := filterFlag.Set(value); err != nil {
+		return err
+	}
+	*l = append(*l, *filterFlag)
+	return nil
 }
 
 func newRuleFlagSet() *RuleFlagSet {
@@ -250,8 +246,8 @@ func newRuleFlagSet() *RuleFlagSet {
 	rule.flagSet.BoolVar(&rule.DeleteAll, "D", false, "delete all")
 	rule.flagSet.Var(&rule.Append, "a", "append rule")
 	rule.flagSet.Var(&rule.Prepend, "A", "prepend rule")
-	rule.flagSet.Var(&rule.Comparison, "C", "comparison filter")
-	rule.flagSet.Var(&rule.Filter, "F", "filter")
+	rule.flagSet.Var((*InterFieldFilterList)(&rule.Filters), "C", "comparison filter")
+	rule.flagSet.Var((*ValueFilterList)(&rule.Filters), "F", "filter")
 	rule.flagSet.Var(&rule.Syscall, "S", "syscall name, number, or 'all'")
 	rule.flagSet.Var(&rule.Permissions, "p", "access type - r=read, w=write, x=execute, a=attribute change")
 	rule.flagSet.StringVar(&rule.Path, "w", "", "path to watch, no wildcards")
