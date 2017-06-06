@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/elastic/go-libaudit/rule"
-	"github.com/elastic/go-libaudit/rule/parse"
+	"github.com/elastic/go-libaudit/rule/flags"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
@@ -53,7 +53,7 @@ func testRulesFromGoldenFile(t *testing.T, goldenFile string) {
 					t.Log("rule:", test.Flags)
 				}
 
-				r, err := parse.Rule(test.Flags)
+				r, err := flags.Parse(test.Flags)
 				if err != nil {
 					t.Fatal("rule:", test.Flags, "error:", err)
 				}
@@ -63,7 +63,8 @@ func testRulesFromGoldenFile(t *testing.T, goldenFile string) {
 					t.Fatal("rule:", test.Flags, "error:", err)
 				}
 
-				assert.EqualValues(t, []byte(test.Bytes), actualBytes, "rule: %v", test.Flags)
+				//fmt.Println(hex.Dump([]byte(actualBytes)))
+				assert.EqualValues(t, []byte(test.Bytes), []byte(actualBytes), "rule: %v", test.Flags)
 			})
 		}
 	})

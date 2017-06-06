@@ -1,15 +1,15 @@
-package parse_test
+package flags_test
 
 import (
 	"testing"
 
 	. "github.com/elastic/go-libaudit/rule"
-	"github.com/elastic/go-libaudit/rule/parse"
+	"github.com/elastic/go-libaudit/rule/flags"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseRule(t *testing.T) {
+func TestFlagsParse(t *testing.T) {
 	tests := []struct {
 		flags string
 		rule  interface{}
@@ -119,7 +119,7 @@ func TestParseRule(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		rule, err := parse.Rule(tc.flags)
+		rule, err := flags.Parse(tc.flags)
 		if tc.rule == nil {
 			if err == nil {
 				t.Error("expected error in rule:", tc.flags)

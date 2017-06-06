@@ -1,6 +1,6 @@
-// Package parse provides parsing of audit rules as specified using CLI flags
+// Package flags provides parsing of audit rules as specified using CLI flags
 // in accordance to the man page for auditctl (from the auditd userspace tools).
-package parse
+package flags
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"github.com/elastic/go-libaudit/rule"
 )
 
-func Rule(args string) (rule.Rule, error) {
+func Parse(args string) (rule.Rule, error) {
 	// Parse the flags.
 	ruleFlagSet := newRuleFlagSet()
 	if err := ruleFlagSet.flagSet.Parse(strings.Fields(args)); err != nil {

@@ -1,13 +1,14 @@
 package rule
 
 import (
+	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/elastic/go-libaudit/auparse"
-
 	"github.com/pkg/errors"
 )
 
@@ -52,14 +53,14 @@ func Build(rule Rule) (WireFormat, error) {
 			}
 		}
 
-		if len(v.Keys) > 0 {
-			keys := strings.Join(v.Keys, string(keySeparator))
-			if err = addFilter(data, "key", "=", keys); err != nil {
-				return nil, errors.Wrapf(err, "failed to add keys [%v]", strings.Join(v.Keys, ","))
-			}
+		if err = addKeys(data, v.Keys); err != nil {
+			return nil, err
 		}
+
 	case *FileWatchRule:
-		return nil, errors.New("file watch rules are not implemented, use syscall rules")
+		if err = addFileWatch(data, v); err != nil {
+			return nil, err
+		}
 	default:
 		return nil, errors.Errorf("unknown rule type: %T", v)
 	}
@@ -70,6 +71,63 @@ func Build(rule Rule) (WireFormat, error) {
 	}
 
 	return ard.toWireFormat(), nil
+}
+
+func addFileWatch(data *ruleData, rule *FileWatchRule) error {
+	path := filepath.Clean(rule.Path)
+
+	if !filepath.IsAbs(path) {
+		return errors.Errorf("path must be absolute: %v", path)
+	}
+
+	watchType := "path"
+	if info, err := os.Stat(path); err == nil && info.IsDir() {
+		watchType = "dir"
+	}
+
+	var perms string
+	if len(rule.Permissions) == 0 {
+		perms = "rwxa"
+	} else {
+		perms = ""
+		for _, p := range rule.Permissions {
+			switch p {
+			case ReadAccessType:
+				perms += "r"
+			case WriteAccessType:
+				perms += "w"
+			case ExecuteAccessType:
+				perms += "x"
+			case AttributeChangeAccessType:
+				perms += "a"
+			}
+		}
+	}
+
+	// Build rule.
+	data.flags = exitFilter
+	data.action = alwaysAction
+	data.allSyscalls = true
+	if err := addFilter(data, watchType, "=", path); err != nil {
+		return err
+	}
+	if err := addFilter(data, "perm", "=", perms); err != nil {
+		return err
+	}
+	if err := addKeys(data, rule.Keys); err != nil {
+		return err
+	}
+	return nil
+}
+
+func addKeys(data *ruleData, keys []string) error {
+	if len(keys) > 0 {
+		key := strings.Join(keys, string(keySeparator))
+		if err := addFilter(data, "key", "=", key); err != nil {
+			return errors.Wrapf(err, "failed to add keys [%v]", strings.Join(keys, ","))
+		}
+	}
+	return nil
 }
 
 type ruleData struct {
