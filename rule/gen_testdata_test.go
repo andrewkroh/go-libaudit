@@ -1,6 +1,6 @@
 // +build linux
 
-package rule
+package rule_test
 
 import (
 	"bufio"
@@ -17,8 +17,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var update = flag.Bool("update", false, "update .golden files")
+var update = flag.Bool("update", false, "update .golden.yml files")
 
+// TestUpdateGoldenData generates new X.rules.golden.yml files the given
+// X.rules files. The .rules files contain rules that are installed to the
+// kernel using auditctl (auditd package must be installed). Then the binary
+// representation of the rule from the kernel is requested and stored. Each
+// rules and blob is stored in the YAML file as a test case.
+//
+// The kernel version and auditctl version used to generate the golden data
+// are stored as comments in the YAML file header.
 func TestUpdateGoldenData(t *testing.T) {
 	if !*update {
 		t.SkipNow()
@@ -40,7 +48,7 @@ func makeGoldenFile(t testing.TB, rulesFile string) {
 		t.Fatal(err)
 	}
 
-	var testData TestData
+	var testData GoldenData
 	s := bufio.NewScanner(bytes.NewReader(rules))
 	for s.Scan() {
 		line := strings.TrimSpace(s.Text())
@@ -50,7 +58,7 @@ func makeGoldenFile(t testing.TB, rulesFile string) {
 
 		ruleData := auditctlExec(t, line)
 
-		testData.Rules = append(testData.Rules, RuleTest{
+		testData.Rules = append(testData.Rules, TestCase{
 			Flags: line,
 			Bytes: string(ruleData),
 		})

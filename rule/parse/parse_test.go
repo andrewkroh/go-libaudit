@@ -1,23 +1,26 @@
-package rule
+package parse_test
 
 import (
 	"testing"
+
+	. "github.com/elastic/go-libaudit/rule"
+	"github.com/elastic/go-libaudit/rule/parse"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParseRule(t *testing.T) {
 	tests := []struct {
-		rule    string
-		flagSet *RuleFlagSet
+		flags string
+		rule  interface{}
 	}{
 		{
 			"-w /etc/shadow -p wa -k identity",
-			&RuleFlagSet{
+			&FileWatchRule{
 				Type:        FileWatchRuleType,
 				Path:        "/etc/shadow",
 				Permissions: []AccessType{WriteAccessType, AttributeChangeAccessType},
-				Key:         []string{"identity"},
+				Keys:        []string{"identity"},
 			},
 		},
 		{
@@ -25,30 +28,28 @@ func TestParseRule(t *testing.T) {
 		},
 		{
 			"-w /etc/shadow -p wa -k identity -k users",
-			&RuleFlagSet{
+			&FileWatchRule{
 				Type:        FileWatchRuleType,
 				Path:        "/etc/shadow",
 				Permissions: []AccessType{WriteAccessType, AttributeChangeAccessType},
-				Key:         []string{"identity", "users"},
+				Keys:        []string{"identity", "users"},
 			},
 		},
 		{
 			"-a always,exit -F path=/etc/shadow -F perm=wa",
-			&RuleFlagSet{
-				Type: AppendSyscallRuleType,
-				Append: AddFlag{
-					Action: "always",
-					List:   "exit",
-				},
-				Filters: []FilterFlag{
+			&SyscallRule{
+				Type:   AppendSyscallRuleType,
+				Action: "always",
+				List:   "exit",
+				Filters: []FilterSpec{
 					{
-						Type:       ValueFilterFlagType,
+						Type:       ValueFilterType,
 						LHS:        "path",
 						Comparator: "=",
 						RHS:        "/etc/shadow",
 					},
 					{
-						Type:       ValueFilterFlagType,
+						Type:       ValueFilterType,
 						LHS:        "perm",
 						Comparator: "=",
 						RHS:        "wa",
@@ -58,7 +59,7 @@ func TestParseRule(t *testing.T) {
 		},
 		{
 			"-D",
-			&RuleFlagSet{Type: DeleteAllRuleType, DeleteAll: true},
+			&DeleteAllRule{Type: DeleteAllRuleType},
 		},
 		{
 			"-E", nil,
@@ -71,30 +72,27 @@ func TestParseRule(t *testing.T) {
 		},
 		{
 			"-D -k key",
-			&RuleFlagSet{
-				Type:      DeleteAllRuleType,
-				DeleteAll: true,
-				Key:       []string{"key"},
+			&DeleteAllRule{
+				Type: DeleteAllRuleType,
+				Keys: []string{"key"},
 			},
 		},
 		{
 			"-D -D",
-			&RuleFlagSet{Type: DeleteAllRuleType, DeleteAll: true},
+			&DeleteAllRule{Type: DeleteAllRuleType},
 		},
 		{
 			"-a exit,always -A task,never", nil,
 		},
 		{
 			"-A always,exit -C auid!=uid",
-			&RuleFlagSet{
-				Type: PrependSyscallRuleType,
-				Prepend: AddFlag{
-					Action: "always",
-					List:   "exit",
-				},
-				Filters: []FilterFlag{
+			&SyscallRule{
+				Type:   PrependSyscallRuleType,
+				Action: "always",
+				List:   "exit",
+				Filters: []FilterSpec{
 					{
-						Type:       InterFieldFilterFlagType,
+						Type:       InterFieldFilterType,
 						LHS:        "auid",
 						Comparator: "!=",
 						RHS:        "uid",
@@ -104,15 +102,13 @@ func TestParseRule(t *testing.T) {
 		},
 		{
 			"-a exit,always -F auid>=1000",
-			&RuleFlagSet{
-				Type: AppendSyscallRuleType,
-				Append: AddFlag{
-					Action: "always",
-					List:   "exit",
-				},
-				Filters: []FilterFlag{
+			&SyscallRule{
+				Type:   AppendSyscallRuleType,
+				Action: "always",
+				List:   "exit",
+				Filters: []FilterSpec{
 					{
-						Type:       ValueFilterFlagType,
+						Type:       ValueFilterType,
 						LHS:        "auid",
 						Comparator: ">=",
 						RHS:        "1000",
@@ -123,17 +119,16 @@ func TestParseRule(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		rule, err := ParseRule(tc.rule)
-		if tc.flagSet == nil {
+		rule, err := parse.Rule(tc.flags)
+		if tc.rule == nil {
 			if err == nil {
-				t.Error("expected error in rule:", tc.rule)
+				t.Error("expected error in rule:", tc.flags)
 			} else {
-				t.Logf("parse error: %v in rule: %v", err, tc.rule)
+				t.Logf("parse error: %v in rule: %v", err, tc.flags)
 			}
 			continue
 		}
-		rule.flagSet = nil
-		assert.EqualValues(t, tc.flagSet, rule, "error in %v", tc.rule)
-		t.Logf("%+v", rule)
+		assert.EqualValues(t, tc.rule, rule, "error in %v", tc.flags)
+		t.Logf("%+v", tc.flags)
 	}
 }
