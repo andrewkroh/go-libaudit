@@ -9,8 +9,9 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/elastic/go-libaudit/auparse"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/elastic/go-libaudit/auparse"
 )
 
 func TestBuild(t *testing.T) {

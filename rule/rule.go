@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/elastic/go-libaudit/auparse"
 	"github.com/pkg/errors"
+
+	"github.com/elastic/go-libaudit/auparse"
 )
 
 //go:generate sh -c "go tool cgo -godefs defs_kernel_types.go > zkernel_types.go && gofmt -w zkernel_types.go"

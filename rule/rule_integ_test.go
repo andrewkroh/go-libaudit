@@ -3,15 +3,19 @@ package rule_test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
-
-	"github.com/elastic/go-libaudit/rule"
-	"github.com/elastic/go-libaudit/rule/flags"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
+
+	"github.com/elastic/go-libaudit/rule"
+	"github.com/elastic/go-libaudit/rule/flags"
 )
+
+var tempDir = filepath.Join(os.TempDir(), "audit-test")
 
 type GoldenData struct {
 	Rules []TestCase `yaml:"rules"`
@@ -49,6 +53,8 @@ func testRulesFromGoldenFile(t *testing.T, goldenFile string) {
 
 		for i, test := range tests.Rules {
 			t.Run(fmt.Sprintf("rule %d", i), func(t *testing.T) {
+				defer os.RemoveAll(tempDir)
+
 				if testing.Verbose() {
 					t.Log("rule:", test.Flags)
 				}
@@ -56,6 +62,11 @@ func testRulesFromGoldenFile(t *testing.T, goldenFile string) {
 				r, err := flags.Parse(test.Flags)
 				if err != nil {
 					t.Fatal("rule:", test.Flags, "error:", err)
+				}
+
+				switch v := r.(type) {
+				case *rule.FileWatchRule:
+					mkdirTempPaths(t, v.Path)
 				}
 
 				actualBytes, err := rule.Build(r)
@@ -68,4 +79,27 @@ func testRulesFromGoldenFile(t *testing.T, goldenFile string) {
 			})
 		}
 	})
+}
+
+// mkdirThenCleanup create a directory on the system if the rule requires a
+// directory to be present.
+func mkdirTempPaths(t testing.TB, path string) {
+	if !strings.HasPrefix(path, tempDir) {
+		t.Fatalf("path is not inside the test temp dir (%v): %v", tempDir, path)
+	}
+
+	if strings.HasSuffix(path, "/") {
+		if err := os.MkdirAll(path, 0600); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		// Touch a file.
+		dir := filepath.Dir(path)
+		if err := os.MkdirAll(dir, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := ioutil.WriteFile(path, nil, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
