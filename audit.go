@@ -250,13 +250,12 @@ func (c *AuditClient) AddRule(rule []byte) error {
 	}
 
 	if err = ParseNetlinkError(ack.Data); err != NLE_SUCCESS {
-		if len(ack.Data) >= 4+12 {
-			status := &AuditStatus{}
-			if err = status.fromWireFormat(ack.Data[4:]); err == nil {
-				return syscall.Errno(status.Failure)
+		if errno, ok := err.(NetlinkErrno); ok {
+			if syscall.Errno(errno) == syscall.EEXIST {
+				return errors.New("rule exists")
 			}
 		}
-		return err
+		return errors.Wrap(err, "error adding audit rule")
 	}
 
 	return nil

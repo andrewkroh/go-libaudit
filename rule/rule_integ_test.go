@@ -15,7 +15,7 @@ import (
 	"github.com/elastic/go-libaudit/rule/flags"
 )
 
-var tempDir = filepath.Join(os.TempDir(), "audit-test")
+var tempDir = "/tmp/audit-test"
 
 type GoldenData struct {
 	Rules []TestCase `yaml:"rules"`
