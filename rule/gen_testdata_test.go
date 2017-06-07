@@ -156,13 +156,13 @@ func makePaths(t testing.TB, tmpDir string, rule string) string {
 
 		if strings.HasSuffix(path, "/") {
 			// Treat paths with trailing slashes as a directory to monitor.
-			if err := os.MkdirAll(realPath, 0600); err != nil {
+			if err := os.MkdirAll(realPath, 0700); err != nil {
 				t.Fatal(err)
 			}
 		} else {
 			// Touch a file.
 			dir := filepath.Dir(realPath)
-			if err := os.MkdirAll(dir, 0600); err != nil {
+			if err := os.MkdirAll(dir, 0700); err != nil {
 				t.Fatal(err)
 			}
 			if err := ioutil.WriteFile(realPath, nil, 0600); err != nil {

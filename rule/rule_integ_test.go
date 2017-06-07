@@ -89,13 +89,13 @@ func mkdirTempPaths(t testing.TB, path string) {
 	}
 
 	if strings.HasSuffix(path, "/") {
-		if err := os.MkdirAll(path, 0600); err != nil {
+		if err := os.MkdirAll(path, 0700); err != nil {
 			t.Fatal(err)
 		}
 	} else {
 		// Touch a file.
 		dir := filepath.Dir(path)
-		if err := os.MkdirAll(dir, 0600); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			t.Fatal(err)
 		}
 		if err := ioutil.WriteFile(path, nil, 0600); err != nil {
