@@ -7,10 +7,6 @@ go_import_path: github.com/elastic/go-libaudit
 
 install:
 - go get -d -t ./...
-- env
-- ls -la /tmp
-- mkdir /tmp/audit-test
-- ls -la /tmp
 
 script:
 - >
