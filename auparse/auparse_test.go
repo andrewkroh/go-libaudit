@@ -22,11 +22,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -285,6 +287,21 @@ func readGoldenFile(name string) ([]*StoredAuditMessage, error) {
 	}
 
 	return out, nil
+}
+
+func BenchmarkParseLogLine(b *testing.B) {
+	data, err := ioutil.ReadFile("testdata/audit-rhel7.log")
+	require.NoError(b, err)
+	msgs := strings.Split(string(data), "\n")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		msg := msgs[i  % len(msgs)]
+		_, err :=  ParseLogLine(msg)
+		if err != nil {
+			b.Fatal(err, msg)
+		}
+	}
 }
 
 func BenchmarkParseAuditHeader(b *testing.B) {

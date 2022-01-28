@@ -1,0 +1,15 @@
+type: AVC
+typeid: 0
+timestamp: "1170021493.977"
+sequence: "293"
+values:
+  comm: pickup
+  dev: hda7
+  ino: "14911367"
+  name: maildrop
+  pid: "13010"
+  scontext: system_u:system_r:postfix_pickup_t:s0
+  tclass: dir
+  tcontext: system_u:object_r:postfix_spool_maildrop_t:s0
+message: 'avc:  denied  { read } for  '
+original: 'type=AVC msg=audit(1170021493.977:293): avc:  denied  { read } for  pid=13010 comm="pickup" name="maildrop" dev=hda7 ino=14911367 scontext=system_u:system_r:postfix_pickup_t:s0 tcontext=system_u:object_r:postfix_spool_maildrop_t:s0 tclass=dir'

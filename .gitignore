@@ -29,3 +29,6 @@ cmd/auparse/auparse
 
 # Vendor
 vendor/*/
+
+*.svg
+*.dot
