@@ -98,3 +98,19 @@ func TestHexNumStringValue(t *testing.T) {
 		require.Equal(t, v, "")
 	})
 }
+
+func BenchmarkParseLogLine(b *testing.B) {
+	data, err := ioutil.ReadFile("../testdata/audit-rhel7.log")
+	require.NoError(b, err)
+	msgs := strings.Split(string(data), "\n")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		msg := msgs[i  % len(msgs)]
+		var m Message
+		err :=  m.Unpack(msg)
+		if err != nil {
+			b.Fatal(err, msg)
+		}
+	}
+}
