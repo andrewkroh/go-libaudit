@@ -65,3 +65,31 @@ func TestOldDataUnpack(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, ioutil.WriteFile("testdata/old.golden", outData, 0644))
 }
+
+func TestHexNumStringValue(t *testing.T) {
+	t.Run("hex", func(t *testing.T) {
+		var m Message
+		err := m.unpackData("ABCDEF", Value)
+		require.NoError(t, err)
+	})
+	t.Run("num", func(t *testing.T) {
+		var m Message
+		err := m.unpackData("123", Value)
+		require.NoError(t, err)
+	})
+	t.Run("string", func(t *testing.T) {
+		var m Message
+		err := m.unpackData("ab:cd:ef", Value)
+		require.NoError(t, err)
+	})
+	t.Run("dq", func(t *testing.T) {
+		var m Message
+		err := m.unpackData(`"123"`, Value)
+		require.NoError(t, err)
+	})
+	t.Run("sq", func(t *testing.T) {
+		var m Message
+		err := m.unpackData(`'123'`, Value)
+		require.NoError(t, err)
+	})
+}

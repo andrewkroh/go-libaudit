@@ -3,13 +3,13 @@ typeid: 0
 timestamp: "1488862769.030"
 sequence: "19469538"
 values:
-  auid: "700"
-  cmd: 2F7573722F6C696236342F6E6167696F732F706C7567696E732F636865636B5F617374657269736B5F7369705F7065657273202D7020313037
+  auid: NUM:700
+  cmd: /usr/lib64/nagios/plugins/check_asterisk_sip_peers -p 107
   d: /
-  pid: "3027"
+  pid: NUM:3027
   res: success
-  ses: "11988"
+  ses: NUM:11988
   terminal: '?'
-  uid: "497"
+  uid: NUM:497
 message: cw
 original: 'type=USER_CMD msg=audit(1488862769.030:19469538): user pid=3027 uid=497 auid=700 ses=11988 msg=''cwd="/" cmd=2F7573722F6C696236342F6E6167696F732F706C7567696E732F636865636B5F617374657269736B5F7369705F7065657273202D7020313037 terminal=? res=success'''
