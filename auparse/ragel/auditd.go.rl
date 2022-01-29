@@ -44,37 +44,35 @@ action set_key {
 }
 
 action set_value_empty {
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 }
 
 action set_value_string {
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 }
 
 action set_value_number {
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 }
 
 action set_value_hex {
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 }
 
 action push_kv {
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 }
 
 single_quote = "'";
@@ -200,14 +198,14 @@ func (mt machineType) toState() int {
 
 // unpack unpacks an auditd message.
 func (m *Message) unpack(data string) error {
-    if err := unpack(data, AuditdMessage, m, nil); err != nil {
+    if err := unpack(data, AuditdMessage, m); err != nil {
         return err
     }
     if m.Values == nil {
         return nil
     }
     if msg, found := m.Values["msg"]; found {
-        if err := unpack(msg, UserMsg, m, nil); err != nil {
+        if err := unpack(msg, UserMsg, m); err != nil {
             return fmt.Errorf("error parsing user msg %q: %w", msg, err)
         }
         delete(m.Values, "msg")
@@ -215,30 +213,19 @@ func (m *Message) unpack(data string) error {
     return nil
 }
 
-func parseValue(data string) (string, error) {
-    state := new(auditdMachineState)
-    if err := unpack(data, FieldValue, nil, state); err != nil {
-        return "", err
-    }
-    return *state.value, nil
-}
-
-type auditdMachineState struct {
-    value *string
-}
-
-func unpack(data string, machine machineType, m *Message, state *auditdMachineState) error {
+func unpack(data string, machine machineType, m *Message) error {
     p := 0
     pb := 0
     pe := len(data)
     eof := len(data)
     cs := machine.toState()
 
-    if state == nil {
-        state = new(auditdMachineState)
-    }
-    var auditHeaderEnd int
-    var key string
+    var (
+        auditHeaderEnd int
+        key string
+        value string
+        hasValue bool
+    )
 
     %% write init nocs;
     %% write exec;

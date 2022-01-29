@@ -9,7 +9,7 @@ import (
 )
 
 
-//line auditd.go.rl:176
+//line auditd.go.rl:174
 
 
 
@@ -22,7 +22,7 @@ const en_user_msg_field int = 59
 const en_field_value int = 131
 
 
-//line auditd.go.rl:179
+//line auditd.go.rl:177
 
 type machineType int
 
@@ -47,14 +47,14 @@ func (mt machineType) toState() int {
 
 // unpack unpacks an auditd message.
 func (m *Message) unpack(data string) error {
-    if err := unpack(data, AuditdMessage, m, nil); err != nil {
+    if err := unpack(data, AuditdMessage, m); err != nil {
         return err
     }
     if m.Values == nil {
         return nil
     }
     if msg, found := m.Values["msg"]; found {
-        if err := unpack(msg, UserMsg, m, nil); err != nil {
+        if err := unpack(msg, UserMsg, m); err != nil {
             return fmt.Errorf("error parsing user msg %q: %w", msg, err)
         }
         delete(m.Values, "msg")
@@ -62,39 +62,28 @@ func (m *Message) unpack(data string) error {
     return nil
 }
 
-func parseValue(data string) (string, error) {
-    state := new(auditdMachineState)
-    if err := unpack(data, FieldValue, nil, state); err != nil {
-        return "", err
-    }
-    return *state.value, nil
-}
-
-type auditdMachineState struct {
-    value *string
-}
-
-func unpack(data string, machine machineType, m *Message, state *auditdMachineState) error {
+func unpack(data string, machine machineType, m *Message) error {
     p := 0
     pb := 0
     pe := len(data)
     eof := len(data)
     cs := machine.toState()
 
-    if state == nil {
-        state = new(auditdMachineState)
-    }
-    var auditHeaderEnd int
-    var key string
+    var (
+        auditHeaderEnd int
+        key string
+        value string
+        hasValue bool
+    )
 
     
-//line auditd.go:92
+//line auditd.go:81
 	{
 	}
 
-//line auditd.go.rl:244
+//line auditd.go.rl:231
     
-//line auditd.go:98
+//line auditd.go:87
 	{
 	if p == pe {
 		goto _test_eof
@@ -529,7 +518,7 @@ tr12:
 			goto _test_eof12
 		}
 	st_case_12:
-//line auditd.go:533
+//line auditd.go:522
 		if data[p] == 46 {
 			goto st13
 		}
@@ -584,7 +573,7 @@ tr18:
 			goto _test_eof17
 		}
 	st_case_17:
-//line auditd.go:588
+//line auditd.go:577
 		if 48 <= data[p] && data[p] <= 57 {
 			goto tr19
 		}
@@ -600,7 +589,7 @@ tr19:
 			goto _test_eof18
 		}
 	st_case_18:
-//line auditd.go:604
+//line auditd.go:593
 		if data[p] == 41 {
 			goto tr20
 		}
@@ -619,7 +608,7 @@ tr20:
 			goto _test_eof19
 		}
 	st_case_19:
-//line auditd.go:623
+//line auditd.go:612
 		if data[p] == 58 {
 			goto st20
 		}
@@ -683,7 +672,7 @@ tr40:
 			goto _test_eof22
 		}
 	st_case_22:
-//line auditd.go:687
+//line auditd.go:676
 		if 97 <= data[p] && data[p] <= 122 {
 			goto tr28
 		}
@@ -699,7 +688,7 @@ tr28:
 			goto _test_eof23
 		}
 	st_case_23:
-//line auditd.go:703
+//line auditd.go:692
 		switch data[p] {
 		case 32:
 			goto st24
@@ -732,7 +721,7 @@ tr47:
 			goto _test_eof24
 		}
 	st_case_24:
-//line auditd.go:736
+//line auditd.go:725
 		switch data[p] {
 		case 32:
 			goto st24
@@ -767,7 +756,7 @@ tr30:
 			goto _test_eof79
 		}
 	st_case_79:
-//line auditd.go:771
+//line auditd.go:760
 		switch data[p] {
 		case 32:
 			goto tr97
@@ -810,127 +799,115 @@ tr30:
 tr97:
 //line auditd.go.rl:46
 
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st25
 tr105:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st25
 tr108:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st25
 tr111:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st25
 tr124:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st25
 tr135:
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st25
 	st25:
@@ -938,7 +915,7 @@ tr135:
 			goto _test_eof25
 		}
 	st_case_25:
-//line auditd.go:942
+//line auditd.go:919
 		switch data[p] {
 		case 32:
 			goto st25
@@ -982,12 +959,10 @@ tr109:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st27
 	st27:
@@ -995,7 +970,7 @@ tr109:
 			goto _test_eof27
 		}
 	st_case_27:
-//line auditd.go:999
+//line auditd.go:974
 		if data[p] == 32 {
 			goto st26
 		}
@@ -1012,8 +987,8 @@ tr98:
 tr101:
 //line auditd.go.rl:46
 
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 
 //line auditd.go.rl:12
@@ -1023,108 +998,98 @@ tr101:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st80
 tr107:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st80
 tr112:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st80
 tr125:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st80
 tr136:
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st80
 	st80:
@@ -1132,7 +1097,7 @@ tr136:
 			goto _test_eof80
 		}
 	st_case_80:
-//line auditd.go:1136
+//line auditd.go:1101
 		switch data[p] {
 		case 32:
 			goto tr105
@@ -1177,7 +1142,7 @@ tr34:
 			goto _test_eof29
 		}
 	st_case_29:
-//line auditd.go:1181
+//line auditd.go:1146
 		if data[p] == 34 {
 			goto tr37
 		}
@@ -1192,16 +1157,16 @@ tr35:
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 	goto st81
 tr37:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 	goto st81
@@ -1210,7 +1175,7 @@ tr37:
 			goto _test_eof81
 		}
 	st_case_81:
-//line auditd.go:1214
+//line auditd.go:1179
 		switch data[p] {
 		case 32:
 			goto tr108
@@ -1244,7 +1209,7 @@ tr38:
 			goto _test_eof31
 		}
 	st_case_31:
-//line auditd.go:1248
+//line auditd.go:1213
 		if data[p] == 39 {
 			goto tr37
 		}
@@ -1263,7 +1228,7 @@ tr102:
 			goto _test_eof82
 		}
 	st_case_82:
-//line auditd.go:1267
+//line auditd.go:1232
 		switch data[p] {
 		case 32:
 			goto tr105
@@ -1656,7 +1621,7 @@ tr103:
 			goto _test_eof93
 		}
 	st_case_93:
-//line auditd.go:1660
+//line auditd.go:1625
 		switch data[p] {
 		case 32:
 			goto tr111
@@ -2103,7 +2068,7 @@ tr104:
 			goto _test_eof103
 		}
 	st_case_103:
-//line auditd.go:2107
+//line auditd.go:2072
 		switch data[p] {
 		case 32:
 			goto tr105
@@ -2208,7 +2173,7 @@ tr41:
 			goto _test_eof32
 		}
 	st_case_32:
-//line auditd.go:2212
+//line auditd.go:2177
 		if data[p] == 32 {
 			goto tr41
 		}
@@ -2241,7 +2206,7 @@ tr26:
 			goto _test_eof33
 		}
 	st_case_33:
-//line auditd.go:2245
+//line auditd.go:2210
 		if data[p] == 32 {
 			goto tr41
 		}
@@ -2275,7 +2240,7 @@ tr27:
 			goto _test_eof34
 		}
 	st_case_34:
-//line auditd.go:2279
+//line auditd.go:2244
 		switch data[p] {
 		case 32:
 			goto tr45
@@ -2322,7 +2287,7 @@ tr44:
 			goto _test_eof35
 		}
 	st_case_35:
-//line auditd.go:2326
+//line auditd.go:2291
 		switch data[p] {
 		case 32:
 			goto st24
@@ -2357,7 +2322,7 @@ tr45:
 			goto _test_eof36
 		}
 	st_case_36:
-//line auditd.go:2361
+//line auditd.go:2326
 		switch data[p] {
 		case 32:
 			goto tr45
@@ -2406,7 +2371,7 @@ tr48:
 			goto _test_eof37
 		}
 	st_case_37:
-//line auditd.go:2410
+//line auditd.go:2375
 		switch data[p] {
 		case 32:
 			goto tr45
@@ -2503,7 +2468,7 @@ tr53:
 			goto _test_eof43
 		}
 	st_case_43:
-//line auditd.go:2507
+//line auditd.go:2472
 		if data[p] == 95 {
 			goto st44
 		}
@@ -2542,7 +2507,7 @@ tr56:
 			goto _test_eof45
 		}
 	st_case_45:
-//line auditd.go:2546
+//line auditd.go:2511
 		if data[p] == 109 {
 			goto st2
 		}
@@ -2558,7 +2523,7 @@ tr54:
 			goto _test_eof46
 		}
 	st_case_46:
-//line auditd.go:2562
+//line auditd.go:2527
 		switch data[p] {
 		case 78:
 			goto st47
@@ -2721,7 +2686,7 @@ tr64:
 			goto _test_eof54
 		}
 	st_case_54:
-//line auditd.go:2725
+//line auditd.go:2690
 		if 48 <= data[p] && data[p] <= 57 {
 			goto st55
 		}
@@ -2766,7 +2731,7 @@ tr68:
 			goto _test_eof58
 		}
 	st_case_58:
-//line auditd.go:2770
+//line auditd.go:2735
 		if data[p] == 32 {
 			goto st45
 		}
@@ -2785,7 +2750,7 @@ tr71:
 			goto _test_eof59
 		}
 	st_case_59:
-//line auditd.go:2789
+//line auditd.go:2754
 		if data[p] == 32 {
 			goto tr71
 		}
@@ -2818,7 +2783,7 @@ tr70:
 			goto _test_eof60
 		}
 	st_case_60:
-//line auditd.go:2822
+//line auditd.go:2787
 		if 97 <= data[p] && data[p] <= 122 {
 			goto tr74
 		}
@@ -2834,7 +2799,7 @@ tr74:
 			goto _test_eof61
 		}
 	st_case_61:
-//line auditd.go:2838
+//line auditd.go:2803
 		switch data[p] {
 		case 32:
 			goto st62
@@ -2867,7 +2832,7 @@ tr89:
 			goto _test_eof62
 		}
 	st_case_62:
-//line auditd.go:2871
+//line auditd.go:2836
 		switch data[p] {
 		case 32:
 			goto st62
@@ -2902,7 +2867,7 @@ tr76:
 			goto _test_eof105
 		}
 	st_case_105:
-//line auditd.go:2906
+//line auditd.go:2871
 		switch data[p] {
 		case 32:
 			goto tr137
@@ -2945,127 +2910,115 @@ tr76:
 tr137:
 //line auditd.go.rl:46
 
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st63
 tr145:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st63
 tr148:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st63
 tr151:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st63
 tr164:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st63
 tr175:
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st63
 	st63:
@@ -3073,7 +3026,7 @@ tr175:
 			goto _test_eof63
 		}
 	st_case_63:
-//line auditd.go:3077
+//line auditd.go:3030
 		switch data[p] {
 		case 32:
 			goto st63
@@ -3117,12 +3070,10 @@ tr149:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st65
 	st65:
@@ -3130,7 +3081,7 @@ tr149:
 			goto _test_eof65
 		}
 	st_case_65:
-//line auditd.go:3134
+//line auditd.go:3085
 		if data[p] == 32 {
 			goto st64
 		}
@@ -3147,8 +3098,8 @@ tr138:
 tr141:
 //line auditd.go.rl:46
 
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 
 //line auditd.go.rl:12
@@ -3158,108 +3109,98 @@ tr141:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st106
 tr147:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st106
 tr152:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st106
 tr165:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st106
 tr176:
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 	goto st106
 	st106:
@@ -3267,7 +3208,7 @@ tr176:
 			goto _test_eof106
 		}
 	st_case_106:
-//line auditd.go:3271
+//line auditd.go:3212
 		switch data[p] {
 		case 32:
 			goto tr145
@@ -3312,7 +3253,7 @@ tr80:
 			goto _test_eof67
 		}
 	st_case_67:
-//line auditd.go:3316
+//line auditd.go:3257
 		if data[p] == 34 {
 			goto tr83
 		}
@@ -3327,16 +3268,16 @@ tr81:
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 	goto st107
 tr83:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 	goto st107
@@ -3345,7 +3286,7 @@ tr83:
 			goto _test_eof107
 		}
 	st_case_107:
-//line auditd.go:3349
+//line auditd.go:3290
 		switch data[p] {
 		case 32:
 			goto tr148
@@ -3379,7 +3320,7 @@ tr84:
 			goto _test_eof69
 		}
 	st_case_69:
-//line auditd.go:3383
+//line auditd.go:3324
 		if data[p] == 39 {
 			goto tr83
 		}
@@ -3398,7 +3339,7 @@ tr142:
 			goto _test_eof108
 		}
 	st_case_108:
-//line auditd.go:3402
+//line auditd.go:3343
 		switch data[p] {
 		case 32:
 			goto tr145
@@ -3791,7 +3732,7 @@ tr143:
 			goto _test_eof119
 		}
 	st_case_119:
-//line auditd.go:3795
+//line auditd.go:3736
 		switch data[p] {
 		case 32:
 			goto tr151
@@ -4238,7 +4179,7 @@ tr144:
 			goto _test_eof129
 		}
 	st_case_129:
-//line auditd.go:4242
+//line auditd.go:4183
 		switch data[p] {
 		case 32:
 			goto tr145
@@ -4350,7 +4291,7 @@ tr73:
 			goto _test_eof71
 		}
 	st_case_71:
-//line auditd.go:4354
+//line auditd.go:4295
 		switch data[p] {
 		case 32:
 			goto tr87
@@ -4397,7 +4338,7 @@ tr86:
 			goto _test_eof72
 		}
 	st_case_72:
-//line auditd.go:4401
+//line auditd.go:4342
 		switch data[p] {
 		case 32:
 			goto st62
@@ -4432,7 +4373,7 @@ tr87:
 			goto _test_eof73
 		}
 	st_case_73:
-//line auditd.go:4436
+//line auditd.go:4377
 		switch data[p] {
 		case 32:
 			goto tr87
@@ -4481,7 +4422,7 @@ tr90:
 			goto _test_eof74
 		}
 	st_case_74:
-//line auditd.go:4485
+//line auditd.go:4426
 		switch data[p] {
 		case 32:
 			goto tr87
@@ -4562,7 +4503,7 @@ tr177:
 			goto _test_eof132
 		}
 	st_case_132:
-//line auditd.go:4566
+//line auditd.go:4507
 		if data[p] == 33 {
 			goto st132
 		}
@@ -4598,7 +4539,7 @@ tr91:
 			goto _test_eof76
 		}
 	st_case_76:
-//line auditd.go:4602
+//line auditd.go:4543
 		if data[p] == 34 {
 			goto tr94
 		}
@@ -4613,16 +4554,16 @@ tr92:
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 	goto st133
 tr94:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 	goto st133
@@ -4631,7 +4572,7 @@ tr94:
 			goto _test_eof133
 		}
 	st_case_133:
-//line auditd.go:4635
+//line auditd.go:4576
 		goto st0
 	st77:
 		if p++; p == pe {
@@ -4656,7 +4597,7 @@ tr95:
 			goto _test_eof78
 		}
 	st_case_78:
-//line auditd.go:4660
+//line auditd.go:4601
 		if data[p] == 39 {
 			goto tr94
 		}
@@ -4675,7 +4616,7 @@ tr180:
 			goto _test_eof134
 		}
 	st_case_134:
-//line auditd.go:4679
+//line auditd.go:4620
 		if data[p] == 33 {
 			goto st132
 		}
@@ -4959,7 +4900,7 @@ tr181:
 			goto _test_eof145
 		}
 	st_case_145:
-//line auditd.go:4963
+//line auditd.go:4904
 		if data[p] == 33 {
 			goto st132
 		}
@@ -5316,7 +5257,7 @@ tr182:
 			goto _test_eof155
 		}
 	st_case_155:
-//line auditd.go:5320
+//line auditd.go:5261
 		if data[p] == 33 {
 			goto st132
 		}
@@ -5544,190 +5485,178 @@ tr182:
 		case 131:
 //line auditd.go.rl:46
 
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 
 		case 132, 134, 155:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 		case 81, 107:
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 		case 79, 105:
 //line auditd.go.rl:46
 
-    if state.value == nil {
-        state.value = stringValue("")
+    if !hasValue {
+        value = ""
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 		case 80, 82, 103, 106, 108, 129:
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 		case 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 147, 149, 151, 153:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 		case 156:
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 		case 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 95, 97, 99, 101, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 121, 123, 125, 127:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 		case 146, 148, 150, 152, 154:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 		case 104, 130:
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
 		case 94, 96, 98, 100, 102, 120, 122, 124, 126, 128:
 //line auditd.go.rl:58
 
-    if state.value == nil {
-        state.value = stringValue("NUM:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:64
 
-    if state.value == nil {
-        state.value = stringValue("HEX:" + string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:52
 
-    if state.value == nil {
-        state.value = stringValue(string(data[pb:p]))
+    if !hasValue {
+        value = string(data[pb:p])
     }
 
 //line auditd.go.rl:70
 
     if m.Values == nil {
-        m.Values = map[string]string{}
+        m.Values = make(map[string]string, 10)
     }
-    if state.value != nil {
-        m.Values[key] = *state.value
-    }
-    state.value = nil
+    m.Values[key] = value
+    value = ""
 
-//line auditd.go:5724
+//line auditd.go:5653
 		}
 	}
 
 	_out: {}
 	}
 
-//line auditd.go.rl:245
+//line auditd.go.rl:232
 
     if cs < first_final {
         return fmt.Errorf("error parsing message at pos %d", p+1)

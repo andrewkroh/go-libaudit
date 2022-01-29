@@ -66,38 +66,38 @@ func TestOldDataUnpack(t *testing.T) {
 	require.NoError(t, ioutil.WriteFile("testdata/old.golden", outData, 0644))
 }
 
-func TestHexNumStringValue(t *testing.T) {
-	t.Run("hex", func(t *testing.T) {
-		v, err := parseValue("ABCDEF")
-		require.NoError(t, err)
-		require.Equal(t, v, "HEX:ABCDEF")
-	})
-	t.Run("num", func(t *testing.T) {
-		v, err := parseValue("123")
-		require.NoError(t, err)
-		require.Equal(t, v, "NUM:123")
-	})
-	t.Run("string", func(t *testing.T) {
-		v, err := parseValue("ab:cd:ef")
-		require.NoError(t, err)
-		require.Equal(t, v, "ab:cd:ef")
-	})
-	t.Run("dq", func(t *testing.T) {
-		v, err := parseValue(`"123"`)
-		require.NoError(t, err)
-		require.Equal(t, v, "123")
-	})
-	t.Run("sq", func(t *testing.T) {
-		v, err := parseValue(`'123'`)
-		require.NoError(t, err)
-		require.Equal(t, v, "123")
-	})
-	t.Run("empty", func(t *testing.T) {
-		v, err := parseValue("")
-		require.NoError(t, err)
-		require.Equal(t, v, "")
-	})
-}
+//func TestHexNumStringValue(t *testing.T) {
+//	t.Run("hex", func(t *testing.T) {
+//		v, err := parseValue("ABCDEF")
+//		require.NoError(t, err)
+//		require.Equal(t, v, "HEX:ABCDEF")
+//	})
+//	t.Run("num", func(t *testing.T) {
+//		v, err := parseValue("123")
+//		require.NoError(t, err)
+//		require.Equal(t, v, "NUM:123")
+//	})
+//	t.Run("string", func(t *testing.T) {
+//		v, err := parseValue("ab:cd:ef")
+//		require.NoError(t, err)
+//		require.Equal(t, v, "ab:cd:ef")
+//	})
+//	t.Run("dq", func(t *testing.T) {
+//		v, err := parseValue(`"123"`)
+//		require.NoError(t, err)
+//		require.Equal(t, v, "123")
+//	})
+//	t.Run("sq", func(t *testing.T) {
+//		v, err := parseValue(`'123'`)
+//		require.NoError(t, err)
+//		require.Equal(t, v, "123")
+//	})
+//	t.Run("empty", func(t *testing.T) {
+//		v, err := parseValue("")
+//		require.NoError(t, err)
+//		require.Equal(t, v, "")
+//	})
+//}
 
 func BenchmarkParseLogLine(b *testing.B) {
 	data, err := ioutil.ReadFile("../testdata/audit-rhel7.log")
