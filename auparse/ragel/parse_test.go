@@ -104,10 +104,14 @@ func BenchmarkParseLogLine(b *testing.B) {
 	require.NoError(b, err)
 	msgs := strings.Split(string(data), "\n")
 
+	var m Message
+	m.Values = make([]KeyValue, 0, 10)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		msg := msgs[i  % len(msgs)]
-		var m Message
+		m.Values = m.Values[:0]
+		m.msgIndex = -1
+
 		err :=  m.Unpack(msg)
 		if err != nil {
 			b.Fatal(err, msg)

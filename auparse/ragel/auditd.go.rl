@@ -68,10 +68,10 @@ action set_value_hex {
 }
 
 action push_kv {
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 }
 
@@ -201,14 +201,11 @@ func (m *Message) unpack(data string) error {
     if err := unpack(data, AuditdMessage, m); err != nil {
         return err
     }
-    if m.Values == nil {
+    if m.msgIndex == -1 {
         return nil
     }
-    if msg, found := m.Values["msg"]; found {
-        if err := unpack(msg, UserMsg, m); err != nil {
-            return fmt.Errorf("error parsing user msg %q: %w", msg, err)
-        }
-        delete(m.Values, "msg")
+    if err := unpack(m.Values[m.msgIndex].Value, UserMsg, m); err != nil {
+        return fmt.Errorf("error parsing user msg %q: %w", m.Values[m.msgIndex].Value, err)
     }
     return nil
 }

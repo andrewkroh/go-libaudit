@@ -14,9 +14,16 @@ type Message struct {
 	TypeID    int32
 	Timestamp string
 	Sequence  string
-	Values    map[string]string
+	Values    []KeyValue
 	Message   string
 	Original  string
+
+	msgIndex int
+}
+
+type KeyValue struct {
+	Key string
+	Value string
 }
 
 func (m *Message) Unpack(data string) error {

@@ -3,13 +3,21 @@ typeid: 0
 timestamp: "1170021493.977"
 sequence: "293"
 values:
-  comm: pickup
-  dev: hda7
-  ino: NUM:14911367
-  name: maildrop
-  pid: NUM:13010
-  scontext: system_u:system_r:postfix_pickup_t:s0
-  tclass: dir
-  tcontext: system_u:object_r:postfix_spool_maildrop_t:s0
+- key: pid
+  value: "13010"
+- key: comm
+  value: pickup
+- key: name
+  value: maildrop
+- key: dev
+  value: hda7
+- key: ino
+  value: "14911367"
+- key: scontext
+  value: system_u:system_r:postfix_pickup_t:s0
+- key: tcontext
+  value: system_u:object_r:postfix_spool_maildrop_t:s0
+- key: tclass
+  value: dir
 message: 'avc:  denied  { read } for '
 original: 'type=AVC msg=audit(1170021493.977:293): avc:  denied  { read } for  pid=13010 comm="pickup" name="maildrop" dev=hda7 ino=14911367 scontext=system_u:system_r:postfix_pickup_t:s0 tcontext=system_u:object_r:postfix_spool_maildrop_t:s0 tclass=dir'

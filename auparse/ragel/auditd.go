@@ -50,14 +50,11 @@ func (m *Message) unpack(data string) error {
     if err := unpack(data, AuditdMessage, m); err != nil {
         return err
     }
-    if m.Values == nil {
+    if m.msgIndex == -1 {
         return nil
     }
-    if msg, found := m.Values["msg"]; found {
-        if err := unpack(msg, UserMsg, m); err != nil {
-            return fmt.Errorf("error parsing user msg %q: %w", msg, err)
-        }
-        delete(m.Values, "msg")
+    if err := unpack(m.Values[m.msgIndex].Value, UserMsg, m); err != nil {
+        return fmt.Errorf("error parsing user msg %q: %w", m.Values[m.msgIndex].Value, err)
     }
     return nil
 }
@@ -77,13 +74,13 @@ func unpack(data string, machine machineType, m *Message) error {
     )
 
     
-//line auditd.go:81
+//line auditd.go:78
 	{
 	}
 
-//line auditd.go.rl:231
+//line auditd.go.rl:228
     
-//line auditd.go:87
+//line auditd.go:84
 	{
 	if p == pe {
 		goto _test_eof
@@ -518,7 +515,7 @@ tr12:
 			goto _test_eof12
 		}
 	st_case_12:
-//line auditd.go:522
+//line auditd.go:519
 		if data[p] == 46 {
 			goto st13
 		}
@@ -573,7 +570,7 @@ tr18:
 			goto _test_eof17
 		}
 	st_case_17:
-//line auditd.go:577
+//line auditd.go:574
 		if 48 <= data[p] && data[p] <= 57 {
 			goto tr19
 		}
@@ -589,7 +586,7 @@ tr19:
 			goto _test_eof18
 		}
 	st_case_18:
-//line auditd.go:593
+//line auditd.go:590
 		if data[p] == 41 {
 			goto tr20
 		}
@@ -608,7 +605,7 @@ tr20:
 			goto _test_eof19
 		}
 	st_case_19:
-//line auditd.go:612
+//line auditd.go:609
 		if data[p] == 58 {
 			goto st20
 		}
@@ -672,7 +669,7 @@ tr40:
 			goto _test_eof22
 		}
 	st_case_22:
-//line auditd.go:676
+//line auditd.go:673
 		if 97 <= data[p] && data[p] <= 122 {
 			goto tr28
 		}
@@ -688,7 +685,7 @@ tr28:
 			goto _test_eof23
 		}
 	st_case_23:
-//line auditd.go:692
+//line auditd.go:689
 		switch data[p] {
 		case 32:
 			goto st24
@@ -721,7 +718,7 @@ tr47:
 			goto _test_eof24
 		}
 	st_case_24:
-//line auditd.go:725
+//line auditd.go:722
 		switch data[p] {
 		case 32:
 			goto st24
@@ -756,7 +753,7 @@ tr30:
 			goto _test_eof79
 		}
 	st_case_79:
-//line auditd.go:760
+//line auditd.go:757
 		switch data[p] {
 		case 32:
 			goto tr97
@@ -805,10 +802,10 @@ tr97:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st25
@@ -821,20 +818,20 @@ tr105:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st25
 tr108:
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st25
@@ -853,10 +850,10 @@ tr111:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st25
@@ -881,10 +878,10 @@ tr124:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st25
@@ -903,10 +900,10 @@ tr135:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st25
@@ -915,7 +912,7 @@ tr135:
 			goto _test_eof25
 		}
 	st_case_25:
-//line auditd.go:919
+//line auditd.go:916
 		switch data[p] {
 		case 32:
 			goto st25
@@ -958,10 +955,10 @@ tr135:
 tr109:
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st27
@@ -970,7 +967,7 @@ tr109:
 			goto _test_eof27
 		}
 	st_case_27:
-//line auditd.go:974
+//line auditd.go:971
 		if data[p] == 32 {
 			goto st26
 		}
@@ -997,10 +994,10 @@ tr101:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st80
@@ -1013,10 +1010,10 @@ tr107:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st80
@@ -1035,10 +1032,10 @@ tr112:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st80
@@ -1063,10 +1060,10 @@ tr125:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st80
@@ -1085,10 +1082,10 @@ tr136:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st80
@@ -1097,7 +1094,7 @@ tr136:
 			goto _test_eof80
 		}
 	st_case_80:
-//line auditd.go:1101
+//line auditd.go:1098
 		switch data[p] {
 		case 32:
 			goto tr105
@@ -1142,7 +1139,7 @@ tr34:
 			goto _test_eof29
 		}
 	st_case_29:
-//line auditd.go:1146
+//line auditd.go:1143
 		if data[p] == 34 {
 			goto tr37
 		}
@@ -1175,7 +1172,7 @@ tr37:
 			goto _test_eof81
 		}
 	st_case_81:
-//line auditd.go:1179
+//line auditd.go:1176
 		switch data[p] {
 		case 32:
 			goto tr108
@@ -1209,7 +1206,7 @@ tr38:
 			goto _test_eof31
 		}
 	st_case_31:
-//line auditd.go:1213
+//line auditd.go:1210
 		if data[p] == 39 {
 			goto tr37
 		}
@@ -1228,7 +1225,7 @@ tr102:
 			goto _test_eof82
 		}
 	st_case_82:
-//line auditd.go:1232
+//line auditd.go:1229
 		switch data[p] {
 		case 32:
 			goto tr105
@@ -1621,7 +1618,7 @@ tr103:
 			goto _test_eof93
 		}
 	st_case_93:
-//line auditd.go:1625
+//line auditd.go:1622
 		switch data[p] {
 		case 32:
 			goto tr111
@@ -2068,7 +2065,7 @@ tr104:
 			goto _test_eof103
 		}
 	st_case_103:
-//line auditd.go:2072
+//line auditd.go:2069
 		switch data[p] {
 		case 32:
 			goto tr105
@@ -2173,7 +2170,7 @@ tr41:
 			goto _test_eof32
 		}
 	st_case_32:
-//line auditd.go:2177
+//line auditd.go:2174
 		if data[p] == 32 {
 			goto tr41
 		}
@@ -2206,7 +2203,7 @@ tr26:
 			goto _test_eof33
 		}
 	st_case_33:
-//line auditd.go:2210
+//line auditd.go:2207
 		if data[p] == 32 {
 			goto tr41
 		}
@@ -2240,7 +2237,7 @@ tr27:
 			goto _test_eof34
 		}
 	st_case_34:
-//line auditd.go:2244
+//line auditd.go:2241
 		switch data[p] {
 		case 32:
 			goto tr45
@@ -2287,7 +2284,7 @@ tr44:
 			goto _test_eof35
 		}
 	st_case_35:
-//line auditd.go:2291
+//line auditd.go:2288
 		switch data[p] {
 		case 32:
 			goto st24
@@ -2322,7 +2319,7 @@ tr45:
 			goto _test_eof36
 		}
 	st_case_36:
-//line auditd.go:2326
+//line auditd.go:2323
 		switch data[p] {
 		case 32:
 			goto tr45
@@ -2371,7 +2368,7 @@ tr48:
 			goto _test_eof37
 		}
 	st_case_37:
-//line auditd.go:2375
+//line auditd.go:2372
 		switch data[p] {
 		case 32:
 			goto tr45
@@ -2468,7 +2465,7 @@ tr53:
 			goto _test_eof43
 		}
 	st_case_43:
-//line auditd.go:2472
+//line auditd.go:2469
 		if data[p] == 95 {
 			goto st44
 		}
@@ -2507,7 +2504,7 @@ tr56:
 			goto _test_eof45
 		}
 	st_case_45:
-//line auditd.go:2511
+//line auditd.go:2508
 		if data[p] == 109 {
 			goto st2
 		}
@@ -2523,7 +2520,7 @@ tr54:
 			goto _test_eof46
 		}
 	st_case_46:
-//line auditd.go:2527
+//line auditd.go:2524
 		switch data[p] {
 		case 78:
 			goto st47
@@ -2686,7 +2683,7 @@ tr64:
 			goto _test_eof54
 		}
 	st_case_54:
-//line auditd.go:2690
+//line auditd.go:2687
 		if 48 <= data[p] && data[p] <= 57 {
 			goto st55
 		}
@@ -2731,7 +2728,7 @@ tr68:
 			goto _test_eof58
 		}
 	st_case_58:
-//line auditd.go:2735
+//line auditd.go:2732
 		if data[p] == 32 {
 			goto st45
 		}
@@ -2750,7 +2747,7 @@ tr71:
 			goto _test_eof59
 		}
 	st_case_59:
-//line auditd.go:2754
+//line auditd.go:2751
 		if data[p] == 32 {
 			goto tr71
 		}
@@ -2783,7 +2780,7 @@ tr70:
 			goto _test_eof60
 		}
 	st_case_60:
-//line auditd.go:2787
+//line auditd.go:2784
 		if 97 <= data[p] && data[p] <= 122 {
 			goto tr74
 		}
@@ -2799,7 +2796,7 @@ tr74:
 			goto _test_eof61
 		}
 	st_case_61:
-//line auditd.go:2803
+//line auditd.go:2800
 		switch data[p] {
 		case 32:
 			goto st62
@@ -2832,7 +2829,7 @@ tr89:
 			goto _test_eof62
 		}
 	st_case_62:
-//line auditd.go:2836
+//line auditd.go:2833
 		switch data[p] {
 		case 32:
 			goto st62
@@ -2867,7 +2864,7 @@ tr76:
 			goto _test_eof105
 		}
 	st_case_105:
-//line auditd.go:2871
+//line auditd.go:2868
 		switch data[p] {
 		case 32:
 			goto tr137
@@ -2916,10 +2913,10 @@ tr137:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st63
@@ -2932,20 +2929,20 @@ tr145:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st63
 tr148:
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st63
@@ -2964,10 +2961,10 @@ tr151:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st63
@@ -2992,10 +2989,10 @@ tr164:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st63
@@ -3014,10 +3011,10 @@ tr175:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st63
@@ -3026,7 +3023,7 @@ tr175:
 			goto _test_eof63
 		}
 	st_case_63:
-//line auditd.go:3030
+//line auditd.go:3027
 		switch data[p] {
 		case 32:
 			goto st63
@@ -3069,10 +3066,10 @@ tr175:
 tr149:
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st65
@@ -3081,7 +3078,7 @@ tr149:
 			goto _test_eof65
 		}
 	st_case_65:
-//line auditd.go:3085
+//line auditd.go:3082
 		if data[p] == 32 {
 			goto st64
 		}
@@ -3108,10 +3105,10 @@ tr141:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st106
@@ -3124,10 +3121,10 @@ tr147:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st106
@@ -3146,10 +3143,10 @@ tr152:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st106
@@ -3174,10 +3171,10 @@ tr165:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st106
@@ -3196,10 +3193,10 @@ tr176:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 	goto st106
@@ -3208,7 +3205,7 @@ tr176:
 			goto _test_eof106
 		}
 	st_case_106:
-//line auditd.go:3212
+//line auditd.go:3209
 		switch data[p] {
 		case 32:
 			goto tr145
@@ -3253,7 +3250,7 @@ tr80:
 			goto _test_eof67
 		}
 	st_case_67:
-//line auditd.go:3257
+//line auditd.go:3254
 		if data[p] == 34 {
 			goto tr83
 		}
@@ -3286,7 +3283,7 @@ tr83:
 			goto _test_eof107
 		}
 	st_case_107:
-//line auditd.go:3290
+//line auditd.go:3287
 		switch data[p] {
 		case 32:
 			goto tr148
@@ -3320,7 +3317,7 @@ tr84:
 			goto _test_eof69
 		}
 	st_case_69:
-//line auditd.go:3324
+//line auditd.go:3321
 		if data[p] == 39 {
 			goto tr83
 		}
@@ -3339,7 +3336,7 @@ tr142:
 			goto _test_eof108
 		}
 	st_case_108:
-//line auditd.go:3343
+//line auditd.go:3340
 		switch data[p] {
 		case 32:
 			goto tr145
@@ -3732,7 +3729,7 @@ tr143:
 			goto _test_eof119
 		}
 	st_case_119:
-//line auditd.go:3736
+//line auditd.go:3733
 		switch data[p] {
 		case 32:
 			goto tr151
@@ -4179,7 +4176,7 @@ tr144:
 			goto _test_eof129
 		}
 	st_case_129:
-//line auditd.go:4183
+//line auditd.go:4180
 		switch data[p] {
 		case 32:
 			goto tr145
@@ -4291,7 +4288,7 @@ tr73:
 			goto _test_eof71
 		}
 	st_case_71:
-//line auditd.go:4295
+//line auditd.go:4292
 		switch data[p] {
 		case 32:
 			goto tr87
@@ -4338,7 +4335,7 @@ tr86:
 			goto _test_eof72
 		}
 	st_case_72:
-//line auditd.go:4342
+//line auditd.go:4339
 		switch data[p] {
 		case 32:
 			goto st62
@@ -4373,7 +4370,7 @@ tr87:
 			goto _test_eof73
 		}
 	st_case_73:
-//line auditd.go:4377
+//line auditd.go:4374
 		switch data[p] {
 		case 32:
 			goto tr87
@@ -4422,7 +4419,7 @@ tr90:
 			goto _test_eof74
 		}
 	st_case_74:
-//line auditd.go:4426
+//line auditd.go:4423
 		switch data[p] {
 		case 32:
 			goto tr87
@@ -4503,7 +4500,7 @@ tr177:
 			goto _test_eof132
 		}
 	st_case_132:
-//line auditd.go:4507
+//line auditd.go:4504
 		if data[p] == 33 {
 			goto st132
 		}
@@ -4539,7 +4536,7 @@ tr91:
 			goto _test_eof76
 		}
 	st_case_76:
-//line auditd.go:4543
+//line auditd.go:4540
 		if data[p] == 34 {
 			goto tr94
 		}
@@ -4572,7 +4569,7 @@ tr94:
 			goto _test_eof133
 		}
 	st_case_133:
-//line auditd.go:4576
+//line auditd.go:4573
 		goto st0
 	st77:
 		if p++; p == pe {
@@ -4597,7 +4594,7 @@ tr95:
 			goto _test_eof78
 		}
 	st_case_78:
-//line auditd.go:4601
+//line auditd.go:4598
 		if data[p] == 39 {
 			goto tr94
 		}
@@ -4616,7 +4613,7 @@ tr180:
 			goto _test_eof134
 		}
 	st_case_134:
-//line auditd.go:4620
+//line auditd.go:4617
 		if data[p] == 33 {
 			goto st132
 		}
@@ -4900,7 +4897,7 @@ tr181:
 			goto _test_eof145
 		}
 	st_case_145:
-//line auditd.go:4904
+//line auditd.go:4901
 		if data[p] == 33 {
 			goto st132
 		}
@@ -5257,7 +5254,7 @@ tr182:
 			goto _test_eof155
 		}
 	st_case_155:
-//line auditd.go:5261
+//line auditd.go:5258
 		if data[p] == 33 {
 			goto st132
 		}
@@ -5499,10 +5496,10 @@ tr182:
 		case 81, 107:
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 		case 79, 105:
@@ -5514,10 +5511,10 @@ tr182:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 		case 80, 82, 103, 106, 108, 129:
@@ -5529,10 +5526,10 @@ tr182:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 		case 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 147, 149, 151, 153:
@@ -5576,10 +5573,10 @@ tr182:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 		case 146, 148, 150, 152, 154:
@@ -5616,10 +5613,10 @@ tr182:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
 		case 94, 96, 98, 100, 102, 120, 122, 124, 126, 128:
@@ -5643,20 +5640,20 @@ tr182:
 
 //line auditd.go.rl:70
 
-    if m.Values == nil {
-        m.Values = make(map[string]string, 10)
+    if key == "msg" {
+        m.msgIndex = len(m.Values)
     }
-    m.Values[key] = value
+    m.Values = append(m.Values, KeyValue{key, value})
     value = ""
 
-//line auditd.go:5653
+//line auditd.go:5650
 		}
 	}
 
 	_out: {}
 	}
 
-//line auditd.go.rl:232
+//line auditd.go.rl:229
 
     if cs < first_final {
         return fmt.Errorf("error parsing message at pos %d", p+1)

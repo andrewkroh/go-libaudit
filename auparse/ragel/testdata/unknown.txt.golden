@@ -3,8 +3,11 @@ typeid: 1333
 timestamp: "1642008700.569"
 sequence: "2424985"
 values:
-  new: "190270282200256"
-  old: "190270475413120"
-  op: freq
+- key: op
+  value: freq
+- key: old
+  value: "190270475413120"
+- key: new
+  value: "190270282200256"
 message: ""
 original: 'type=UNKNOWN[1333] msg=audit(1642008700.569:2424985): op=freq old=190270475413120 new=190270282200256'
