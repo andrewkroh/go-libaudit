@@ -212,3 +212,15 @@ func normalizeEvent(t testing.TB, event testEventOutput) map[string]interface{} 
 	}
 	return out
 }
+
+func BenchmarkCoalesceMessages(b *testing.B) {
+	events := readEventsFromYAML(b, "testdata/rhel-7-linux-3.10.0.yaml")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := CoalesceMessages(events[i%len(events)].messages)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
