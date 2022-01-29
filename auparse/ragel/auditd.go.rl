@@ -88,6 +88,7 @@ open_bracket = '[';
 close_bracket = ']';
 open_paren = '(';
 close_paren = ')';
+sp = ' ';
 
 #
 # Audit Message Type
@@ -112,7 +113,7 @@ audit_msg_type = "type=" (known_audit_msg_type | unknown_audit_msg_type);
 
 time_fractional_sec = (digit+ dot digit{3}) >mark %set_timestamp;
 seq_num = digit+ >mark %set_seq_num;
-audit_header = "msg=audit" open_paren time_fractional_sec colon seq_num close_paren colon space %mark_header_end;
+audit_header = "msg=audit" open_paren time_fractional_sec colon seq_num close_paren colon sp %mark_header_end;
 
 #
 # Message
@@ -126,7 +127,7 @@ msg = (print)* %set_msg;
 # Key
 #
 # Examples: pid, old auid, a3, new-level, denied_mask
-key = (lower (lower | digit | dash | underscore | space)+) >mark %set_key;
+key = (lower (lower | digit | dash | underscore | sp)+) >mark %set_key;
 
 # Value
 #
@@ -140,7 +141,7 @@ double_quoted_value = (print-double_quote)* >mark %set_value_string;
 single_quoted_value = (print-single_quote)* >mark %set_value_string;
 number_value = (dash? digit{1,10}) >mark %set_value_number;
 hex_value = (upper_hex{2})+ >mark %set_value_hex;
-string_value = (print - double_quote - single_quote - space)+ >mark %set_value_string;
+string_value = (print - double_quote - single_quote - sp)+ >mark %set_value_string;
 empty_value = zlen %set_value_empty;
 
 single_quoted = single_quote single_quoted_value single_quote;
@@ -157,7 +158,7 @@ value = (
 
 key_value = key "=" value %push_kv;
 
-kv_pair_separator = space+ | (space colon space) | (comma space) | ( space '(' );
+kv_pair_separator = sp+ | (sp colon sp) | (comma sp) | ( sp '(' );
 kv_pairs = ((key_value kv_pair_separator+)* key_value);
 
 #
@@ -165,10 +166,10 @@ kv_pairs = ((key_value kv_pair_separator+)* key_value);
 # The type=MSG_TYPE is optional because netlink message from the kernel do
 # not contain this part.
 #
-audit_msg = (audit_msg_type space)? audit_header (msg space)? :>> kv_pairs;
+audit_msg = (audit_msg_type sp)? audit_header (msg sp)? :>> kv_pairs;
 
 main := audit_msg;
-user_msg_field := (msg space)? :>> kv_pairs;
+user_msg_field := (msg sp)? :>> kv_pairs;
 field_value := value;
 
 }%%
