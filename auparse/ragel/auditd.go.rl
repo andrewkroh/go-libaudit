@@ -2,7 +2,6 @@
 package ragel
 
 import (
-    "encoding/hex"
     "fmt"
     "strconv"
 )
@@ -15,11 +14,11 @@ action mark {
 }
 
 action mark_header_end {
-    msg_start = p
+    auditHeaderEnd = p
 }
 
 action set_msg {
-    m.Message = string(data[msg_start:p])
+    m.Message = string(data[auditHeaderEnd:p])
 }
 
 action set_msgtype {
@@ -42,30 +41,29 @@ action set_msg_id {
 
 action set_key {
     key = string(data[pb:p])
-    fmt.Println("KEY:", key)
+}
+
+action set_value_empty {
+    if state.value == nil {
+        state.value = stringValue("")
+    }
 }
 
 action set_value_string {
-    if value == "" {
-        value = string(data[pb:p])
-        fmt.Println("STRING:", value)
+    if state.value == nil {
+        state.value = stringValue(string(data[pb:p]))
     }
 }
 
 action set_value_number {
-    if value == "" {
-        value = "NUM:" + string(data[pb:p])
-        fmt.Println(value)
+    if state.value == nil {
+        state.value = stringValue("NUM:" + string(data[pb:p]))
     }
 }
 
 action set_value_hex {
-    if value == "" {
-        value = "HEX:" + string(data[pb:p])
-        fmt.Println(value)
-        data, _ := hex.DecodeString(string(data[pb:p]))
-        value = string(data)
-        fmt.Println(value)
+    if state.value == nil {
+        state.value = stringValue("HEX:" + string(data[pb:p]))
     }
 }
 
@@ -73,71 +71,107 @@ action push_kv {
     if m.Values == nil {
         m.Values = map[string]string{}
     }
-    if value != "" {
-        m.Values[key] = value
-        value = ""
+    if state.value != nil {
+        m.Values[key] = *state.value
     }
+    state.value = nil
 }
 
 single_quote = "'";
-
 double_quote = '"';
-
 eq = '=';
-
-hex = 'A' .. 'F' | '0' .. '9';
-
+upper_hex = 'A' .. 'F' | '0' .. '9';
 dash = '-';
 underscore = '_';
 colon = ':';
 comma = ',';
+dot = '.';
+open_bracket = '[';
+close_bracket = ']';
+open_paren = '(';
+close_paren = ')';
 
-double_quoted_value = (print-single_quote)* >mark %set_value_string;
+#
+# Audit Message Type
+# Example: type=SYSCALL
+#
+
+# Example: UNKNOWN[1333]
+msg_id = digit{4} >mark %set_msg_id;
+unknown_audit_msg_type = "UNKNOWN" open_bracket msg_id close_bracket;
+
+# Example: USER_CMD
+known_audit_msg_type = (upper (upper | underscore)+)  >mark %set_msgtype;
+
+audit_msg_type = "type=" (known_audit_msg_type | unknown_audit_msg_type);
+
+#
+# Audit Header
+# Example: msg=audit(1491924063.550:1065565):
+# The format is msg=audit(timestamp:ID) where timestamp is fractional unix epoch
+# seconds containing millisecond precision.
+#
+
+time_fractional_sec = (digit+ dot digit{3}) >mark %set_timestamp;
+seq_num = digit+ >mark %set_seq_num;
+audit_header = "msg=audit" open_paren time_fractional_sec colon seq_num close_paren colon space %mark_header_end;
+
+#
+# Message
+#
+msg = (print)* %set_msg;
+
+#
+# Key Value Pairs
+#
+
+# Key
+#
+# Examples: pid, old auid, a3, new-level, denied_mask
+key = (lower (lower | digit | dash | underscore | space)+) >mark %set_key;
+
+# Value
+#
+# Examples:
+#   number: -10, 6102
+#   hex encoded: 2F7573722F6C6962
+#   single quoted: 'foo="bar"'
+#   double quoted: "/sbin/auditctl"
+#   string: NORMAL
+double_quoted_value = (print-double_quote)* >mark %set_value_string;
 single_quoted_value = (print-single_quote)* >mark %set_value_string;
 number_value = (dash? digit{1,10}) >mark %set_value_number;
-hex_value = (hex hex)+ >mark %set_value_hex;
+hex_value = (upper_hex{2})+ >mark %set_value_hex;
 string_value = (print - double_quote - single_quote - space)+ >mark %set_value_string;
+empty_value = zlen %set_value_empty;
 
 single_quoted = single_quote single_quoted_value single_quote;
 double_quoted = double_quote double_quoted_value double_quote;
 
 value = (
-    double_quoted %(num_vs_string, 3) |
-    single_quoted %(num_vs_string, 3) |
+    empty_value |
+    double_quoted |
+    single_quoted |
     number_value  %(num_vs_string, 2) |
     hex_value     %(num_vs_string, 1) |
     string_value  %(num_vs_string, 0)
 );
 
-msg_type_chars = ( alpha | digit | "_");
-
-key_name = alpha (alpha | digit | dash | underscore | space)+;
-
-key = key_name >mark %set_key;
-
-# Value may be empty. (Maybe want to use zlen with a *string to keep empty values.)
-key_value = key "=" value? %push_kv;
-
-msg_id = digit{4} >mark %set_msg_id;
-
-msg_type = msg_type_chars+ >mark %set_msgtype;
-
-unknown_msg_type = "UNKNOWN[" msg_id "]";
-
-time_fractional = (digit+ "." digit{3}) >mark %set_timestamp;
-
-seq_num = digit+ >mark %set_seq_num;
-
-audit_header = "msg=audit(" time_fractional ":" seq_num "):" space %mark_header_end;
+key_value = key "=" value %push_kv;
 
 kv_pair_separator = space+ | (space colon space) | (comma space) | ( space '(' );
-kvs = ((key_value kv_pair_separator+)* key_value) >set_msg;
+kv_pairs = ((key_value kv_pair_separator+)* key_value);
 
-msg = (print - eq )*;
+#
+# Audit Message
+# The type=MSG_TYPE is optional because netlink message from the kernel do
+# not contain this part.
+#
+audit_msg = (audit_msg_type space)? audit_header (msg space)? :>> kv_pairs;
 
-main := "type=" (unknown_msg_type | msg_type) " " audit_header (msg space)? kvs;
-inner_kvs := ((print - eq)+)? space? kvs >set_msg;
-value_exp := value;
+main := audit_msg;
+user_msg_field := (msg space)? :>> kv_pairs;
+field_value := value;
 
 }%%
 
@@ -147,18 +181,18 @@ type machineType int
 
 const (
     AuditdMessage machineType = iota
-    KeyValuePairs
-    Value
+    UserMsg
+    FieldValue
 )
 
 func (mt machineType) toState() int {
     switch mt {
     case AuditdMessage:
         return en_main
-    case KeyValuePairs:
-        return en_inner_kvs
-    case Value:
-        return en_value_exp
+    case UserMsg:
+        return en_user_msg_field
+    case FieldValue:
+        return en_field_value
     default:
         panic("unhanded type")
     }
@@ -166,14 +200,14 @@ func (mt machineType) toState() int {
 
 // unpack unpacks an auditd message.
 func (m *Message) unpack(data string) error {
-    if err := m.unpackData(data, AuditdMessage); err != nil {
+    if err := unpack(data, AuditdMessage, m, nil); err != nil {
         return err
     }
     if m.Values == nil {
         return nil
     }
     if msg, found := m.Values["msg"]; found {
-        if err := m.unpackData(msg, KeyValuePairs); err != nil {
+        if err := unpack(msg, UserMsg, m, nil); err != nil {
             return fmt.Errorf("error parsing user msg %q: %w", msg, err)
         }
         delete(m.Values, "msg")
@@ -181,15 +215,32 @@ func (m *Message) unpack(data string) error {
     return nil
 }
 
-func (m *Message) unpackData(data string, machine machineType) error {
+func parseValue(data string) (string, error) {
+    state := new(auditdMachineState)
+    if err := unpack(data, FieldValue, nil, state); err != nil {
+        return "", err
+    }
+    return *state.value, nil
+}
+
+type auditdMachineState struct {
+    value *string
+}
+
+func unpack(data string, machine machineType, m *Message, state *auditdMachineState) error {
     p := 0
     pb := 0
     pe := len(data)
     eof := len(data)
     cs := machine.toState()
 
-    msg_start := 0
-    var key, value string
+    if state == nil {
+        state = new(auditdMachineState)
+    }
+    var auditHeaderEnd int
+    var key string
+
+    %% write init nocs;
     %% write exec;
 
     if cs < first_final {
@@ -197,3 +248,5 @@ func (m *Message) unpackData(data string, machine machineType) error {
     }
     return nil
 }
+
+func stringValue(in string) *string { return &in }

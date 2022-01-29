@@ -12,7 +12,7 @@
     comm: charon
     egid: NUM:0
     euid: NUM:0
-    exe: /usr/libexec/strongswan/charon (deleted)
+    exe: HEX:2F7573722F6C6962657865632F7374726F6E677377616E2F636861726F6E202864656C6574656429
     exit: NUM:464
     fsgid: NUM:0
     fsuid: NUM:0
@@ -36,14 +36,14 @@
   sequence: "19469538"
   values:
     auid: NUM:700
-    cmd: /usr/lib64/nagios/plugins/check_asterisk_sip_peers -p 107
-    d: /
+    cmd: HEX:2F7573722F6C696236342F6E6167696F732F706C7567696E732F636865636B5F617374657269736B5F7369705F7065657273202D7020313037
+    cwd: /
     pid: NUM:3027
     res: success
     ses: NUM:11988
     terminal: '?'
     uid: NUM:497
-  message: cw
+  message: user
   original: 'type=USER_CMD msg=audit(1488862769.030:19469538): user pid=3027 uid=497 auid=700 ses=11988 msg=''cwd="/" cmd=2F7573722F6C696236342F6E6167696F732F706C7567696E732F636865636B5F617374657269736B5F7369705F7065657273202D7020313037 terminal=? res=success'''
 - type: ADD_GROUP
   typeid: 0
@@ -55,14 +55,14 @@
     exe: /usr/sbin/groupadd
     hostname: '?'
     id: NUM:1000
-    p: add-group
+    op: add-group
     pid: NUM:1235
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:unconfined_service_t:s0
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=ADD_GROUP msg=audit(1481076992.414:385): pid=1235 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg=''op=add-group id=1000 exe="/usr/sbin/groupadd" hostname=? addr=? terminal=? res=success'''
 - type: ADD_USER
   typeid: 0
@@ -74,14 +74,14 @@
     exe: /usr/sbin/useradd
     hostname: '?'
     id: NUM:1000
-    p: add-user
+    op: add-user
     pid: NUM:1264
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:unconfined_service_t:s0
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=ADD_USER msg=audit(1481076992.488:389): pid=1264 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg=''op=add-user id=1000 exe="/usr/sbin/useradd" hostname=? addr=? terminal=? res=success'''
 - type: BPRM_FCAPS
   typeid: 0
@@ -89,15 +89,15 @@
   sequence: "529"
   values:
     fe: NUM:0
-    fi: "\0\0\0\0\0\0\0\0"
-    fp: "\0\0\0\0\0\0\0\0"
+    fi: HEX:0000000000000000
+    fp: HEX:0000000000000000
     fver: NUM:0
     new_pe: 0000001fffffffff
-    new_pi: "\0\0\0\0\0\0\0\0"
+    new_pi: HEX:0000000000000000
     new_pp: 0000001fffffffff
-    old_pe: "\0\0\0\0\0\0\0\0"
-    old_pi: "\0\0\0\0\0\0\0\0"
-    old_pp: "\0\0\0\0\0\0\0\0"
+    old_pe: HEX:0000000000000000
+    old_pi: HEX:0000000000000000
+    old_pp: HEX:0000000000000000
   message: ""
   original: 'type=BPRM_FCAPS msg=audit(1481077308.360:529): fver=0 fp=0000000000000000 fi=0000000000000000 fe=0 old_pp=0000000000000000 old_pi=0000000000000000 old_pe=0000000000000000 new_pp=0000001fffffffff new_pi=0000000000000000 new_pe=0000001fffffffff'
 - type: CONFIG_CHANGE
@@ -122,17 +122,17 @@
     acct: andrew_kroh
     addr: 96.241.146.97
     auid: NUM:4294967295
-    exe: exe=
+    exe: /usr/sbin/sshd
     grantors: pam_env,pam_unix
     hostname: pool-96-241-146-97.washdc.fios.verizon.net
-    p: PAM:setcred
+    op: PAM:setcred
     pid: NUM:1298
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: ssh
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=CRED_ACQ msg=audit(1481077043.057:413): pid=1298 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=PAM:setcred grantors=pam_env,pam_unix acct="andrew_kroh" exe="/usr/sbin/sshd" hostname=pool-96-241-146-97.washdc.fios.verizon.net addr=96.241.146.97 terminal=ssh res=success'''
 - type: CRED_DISP
   typeid: 0
@@ -142,17 +142,17 @@
     acct: andrew_kroh
     addr: 96.241.146.97
     auid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/sshd
     grantors: pam_env,pam_unix
     hostname: pool-96-241-146-97.washdc.fios.verizon.net
-    p: PAM:setcred
+    op: PAM:setcred
     pid: NUM:1298
     res: success
     ses: NUM:1
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: ssh
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=CRED_DISP msg=audit(1481077049.058:427): pid=1298 uid=0 auid=1000 ses=1 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=PAM:setcred grantors=pam_env,pam_unix acct="andrew_kroh" exe="/usr/sbin/sshd" hostname=pool-96-241-146-97.washdc.fios.verizon.net addr=96.241.146.97 terminal=ssh res=success'''
 - type: CRED_REFR
   typeid: 0
@@ -162,17 +162,17 @@
     acct: root
     addr: '?'
     auid: NUM:0
-    exe: exe=
+    exe: /usr/sbin/crond
     grantors: pam_env,pam_unix
     hostname: '?'
-    p: PAM:setcred
+    op: PAM:setcred
     pid: NUM:1402
     res: success
     ses: NUM:2
     subj: system_u:system_r:crond_t:s0-s0:c0.c1023
     terminal: cron
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=CRED_REFR msg=audit(1489640461.198:480): pid=1402 uid=0 auid=0 ses=2 subj=system_u:system_r:crond_t:s0-s0:c0.c1023 msg=''op=PAM:setcred grantors=pam_env,pam_unix acct="root" exe="/usr/sbin/crond" hostname=? addr=? terminal=cron res=success'''
 - type: CRYPTO_KEY_USER
   typeid: 0
@@ -186,7 +186,7 @@
     fp: 6d:a3:7f:ed:de:4a:79:f2:aa:49:ec:d1:75:36:97:a3
     hostname: '?'
     kind: server
-    p: destroy
+    op: destroy
     pid: NUM:1299
     res: success
     ses: NUM:4294967295
@@ -195,7 +195,7 @@
     suid: NUM:0
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=CRYPTO_KEY_USER msg=audit(1481077041.497:404): pid=1299 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=destroy kind=server fp=6d:a3:7f:ed:de:4a:79:f2:aa:49:ec:d1:75:36:97:a3 direction=? spid=1299 suid=0  exe="/usr/sbin/sshd" hostname=? addr=96.241.146.97 terminal=? res=success'''
 - type: CRYPTO_SESSION
   typeid: 0
@@ -211,7 +211,8 @@
     ksize: NUM:512
     laddr: 10.142.0.2
     lport: NUM:22
-    p: start
+    mac: ""
+    op: start
     pfs: curve25519-sha256@libssh.org
     pid: NUM:1298
     res: success
@@ -222,7 +223,7 @@
     suid: NUM:74
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=CRYPTO_SESSION msg=audit(1481077041.515:406): pid=1298 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=start direction=from-server cipher=chacha20-poly1305@openssh.com ksize=512 mac= pfs=curve25519-sha256@libssh.org spid=1299 suid=74 rport=63927 laddr=10.142.0.2 lport=22  exe="/usr/sbin/sshd" hostname=? addr=96.241.146.97 terminal=? res=success'''
 - type: CWD
   typeid: 0
@@ -230,15 +231,15 @@
   sequence: "479"
   values:
     cwd: /home/andrew_kroh
-  message: ' '
+  message: ""
   original: 'type=CWD msg=audit(1481077231.371:479):  cwd="/home/andrew_kroh"'
 - type: CWD
   typeid: 0
   timestamp: "1500661699.656"
   sequence: "1208725"
   values:
-    cwd: /tmp/a b c
-  message: ' '
+    cwd: HEX:2F746D702F6120622063
+  message: ""
   original: 'type=CWD msg=audit(1500661699.656:1208725):  cwd=2F746D702F6120622063'
 - type: DAEMON_CONFIG
   typeid: 0
@@ -249,7 +250,7 @@
     pid: NUM:1512
     res: success
     subj: system_u:system_r:unconfined_service_t:s0
-  message: 'config changed, '
+  message: config changed,
   original: 'type=DAEMON_CONFIG msg=audit(1490239800.477:34): config changed, auid=0 pid=1512 subj=system_u:system_r:unconfined_service_t:s0 res=success'
 - type: DAEMON_END
   typeid: 0
@@ -260,7 +261,7 @@
     pid: '?'
     res: success
     subj: '?'
-  message: 'auditd normal halt, sending '
+  message: auditd normal halt, sending
   original: 'type=DAEMON_END msg=audit(1481078697.892:7799): auditd normal halt, sending auid=? pid=? subj=? res=success'
 - type: DAEMON_START
   typeid: 0
@@ -274,7 +275,7 @@
     res: success
     subj: system_u:system_r:auditd_t:s0
     ver: 2.4.1
-  message: 'auditd start, '
+  message: auditd start,
   original: 'type=DAEMON_START msg=audit(1481076983.819:7798): auditd start, ver=2.4.1 format=raw kernel=3.10.0-327.36.3.el7.x86_64 auid=4294967295 pid=251 subj=system_u:system_r:auditd_t:s0 res=success'
 - type: EXECVE
   typeid: 0
@@ -282,12 +283,12 @@
   sequence: "479"
   values:
     a0: auditctl
-    a1: a1=
-    a2: a2=
-    a3: a3=
-    a4: a4=
-    a5: a5=
-    a6: a6=
+    a1: -a
+    a2: exit,always
+    a3: -F
+    a4: arch=b32
+    a5: -S
+    a6: execve
     argc: NUM:7
   message: ""
   original: 'type=EXECVE msg=audit(1481077231.371:479): argc=7 a0="auditctl" a1="-a" a2="exit,always" a3="-F" a4="arch=b32" a5="-S" a6="execve"'
@@ -301,14 +302,14 @@
     exe: /usr/sbin/groupadd
     hostname: '?'
     id: NUM:1000
-    p: add-shadow-group
+    op: add-shadow-group
     pid: NUM:1235
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:unconfined_service_t:s0
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=GRP_MGMT msg=audit(1481076992.419:386): pid=1235 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg=''op=add-shadow-group id=1000 exe="/usr/sbin/groupadd" hostname=? addr=? terminal=? res=success'''
 - type: LOGIN
   typeid: 0
@@ -360,16 +361,16 @@
     addr: '?'
     auid: NUM:4294967295
     comm: systemd
-    exe: exe=
+    exe: /usr/lib/systemd/systemd
     hostname: '?'
     pid: NUM:1
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:init_t:s0
-    t: auditd
     terminal: '?'
     uid: NUM:0
-  message: uni
+    unit: auditd
+  message: ""
   original: 'type=SERVICE_START msg=audit(1481076983.864:6): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg=''unit=auditd comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'''
 - type: SERVICE_STOP
   typeid: 0
@@ -379,23 +380,23 @@
     addr: '?'
     auid: NUM:4294967295
     comm: systemd
-    exe: exe=
+    exe: /usr/lib/systemd/systemd
     hostname: '?'
     pid: NUM:1
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:init_t:s0
-    t: irqbalance
     terminal: '?'
     uid: NUM:0
-  message: uni
+    unit: irqbalance
+  message: ""
   original: 'type=SERVICE_STOP msg=audit(1481076984.534:16): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg=''unit=irqbalance comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'''
 - type: SOCKADDR
   typeid: 0
   timestamp: "1481078424.953"
   sequence: "688"
   values:
-    saddr: !!binary AgAAUKn+qf4AAAAAAAAAAA==
+    saddr: HEX:02000050A9FEA9FE0000000000000000
   message: ""
   original: 'type=SOCKADDR msg=audit(1481078424.953:688): saddr=02000050A9FEA9FE0000000000000000'
 - type: SOCKADDR
@@ -403,7 +404,7 @@
   timestamp: "1490816924.990"
   sequence: "517643"
   values:
-    saddr: "\x10\0\0\0\0\0\0\0\0\0\0\0"
+    saddr: HEX:100000000000000000000000
   message: ""
   original: 'type=SOCKADDR msg=audit(1490816924.990:517643): saddr=100000000000000000000000'
 - type: SOCKADDR
@@ -411,7 +412,7 @@
   timestamp: "1490816924.990"
   sequence: "517644"
   values:
-    saddr: "\n\0\0\x16\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+    saddr: HEX:0A000016000000000000000000000000000000000000000000000000
   message: ""
   original: 'type=SOCKADDR msg=audit(1490816924.990:517644): saddr=0A000016000000000000000000000000000000000000000000000000'
 - type: SOCKADDR
@@ -419,7 +420,7 @@
   timestamp: "1490816924.990"
   sequence: "517645"
   values:
-    saddr: "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+    saddr: HEX:00000000000000000000000000000000
   message: ""
   original: 'type=SOCKADDR msg=audit(1490816924.990:517645): saddr=00000000000000000000000000000000'
 - type: SOCKADDR
@@ -427,10 +428,7 @@
   timestamp: "1490816924.990"
   sequence: "517647"
   values:
-    saddr: !!binary |
-      AQAvdmFyL3J1bi9uc2NkL3NvY2tldAAAYDt7R/x/AAAwPHtH/H8AAAIAAAAAAAAAFAAAAB
-      YAAQMIAAAAAAAAAMA7e0f8fwAAEDt7R/x/AAAgAAAAAAAAADA8e0f8fwAAwPs5hhx/AAB4
-      fy+GHH8=
+    saddr: HEX:01002F7661722F72756E2F6E7363642F736F636B65740000603B7B47FC7F0000303C7B47FC7F0000020000000000000014000000160001030800000000000000C03B7B47FC7F0000103B7B47FC7F00002000000000000000303C7B47FC7F0000C0FB39861C7F0000787F2F861C7F
   message: ""
   original: 'type=SOCKADDR msg=audit(1490816924.990:517647): saddr=01002F7661722F72756E2F6E7363642F736F636B65740000603B7B47FC7F0000303C7B47FC7F0000020000000000000014000000160001030800000000000000C03B7B47FC7F0000103B7B47FC7F00002000000000000000303C7B47FC7F0000C0FB39861C7F0000787F2F861C7F'
 - type: SYSCALL
@@ -447,7 +445,7 @@
     comm: modprobe
     egid: NUM:0
     euid: NUM:0
-    exe: exe=
+    exe: /usr/bin/kmod
     exit: NUM:0
     fsgid: NUM:0
     fsuid: NUM:0
@@ -480,7 +478,7 @@
     comm: google_ip_forwa
     egid: NUM:0
     euid: NUM:0
-    exe: /usr/bin/python2.7;58d1ccfb (deleted)
+    exe: HEX:2F7573722F62696E2F707974686F6E322E373B3538643163636662202864656C6574656429
     exit: NUM:-115
     fsgid: NUM:0
     fsuid: NUM:0
@@ -506,16 +504,16 @@
   values:
     addr: '?'
     auid: NUM:4294967295
-    exe: exe=
+    comm: systemd-update-utmp
+    exe: /usr/lib/systemd/systemd-update-utmp
     hostname: '?'
-    m: systemd-update-utmp
     pid: NUM:273
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:init_t:s0
     terminal: '?'
     uid: NUM:0
-  message: ' com'
+  message: ""
   original: 'type=SYSTEM_BOOT msg=audit(1481076983.876:7): pid=273 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg='' comm="systemd-update-utmp" exe="/usr/lib/systemd/systemd-update-utmp" hostname=? addr=? terminal=? res=success'''
 - type: SYSTEM_RUNLEVEL
   typeid: 0
@@ -525,17 +523,17 @@
     addr: '?'
     auid: NUM:4294967295
     comm: systemd-update-utmp
-    exe: exe=
+    exe: /usr/lib/systemd/systemd-update-utmp
     hostname: '?'
-    l: "N"
     new-level: NUM:3
+    old-level: "N"
     pid: NUM:1279
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:init_t:s0
     terminal: '?'
     uid: NUM:0
-  message: old-leve
+  message: ""
   original: 'type=SYSTEM_RUNLEVEL msg=audit(1481076992.492:390): pid=1279 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:init_t:s0 msg=''old-level=N new-level=3 comm="systemd-update-utmp" exe="/usr/lib/systemd/systemd-update-utmp" hostname=? addr=? terminal=? res=success'''
 - type: USER_ACCT
   typeid: 0
@@ -545,17 +543,17 @@
     acct: andrew_kroh
     addr: 96.241.146.97
     auid: NUM:4294967295
-    exe: exe=
+    exe: /usr/sbin/sshd
     grantors: pam_unix,pam_localuser
     hostname: pool-96-241-146-97.washdc.fios.verizon.net
-    p: PAM:accounting
+    op: PAM:accounting
     pid: NUM:1298
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: ssh
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_ACCT msg=audit(1481077043.052:410): pid=1298 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=PAM:accounting grantors=pam_unix,pam_localuser acct="andrew_kroh" exe="/usr/sbin/sshd" hostname=pool-96-241-146-97.washdc.fios.verizon.net addr=96.241.146.97 terminal=ssh res=success'''
 - type: USER_AUTH
   typeid: 0
@@ -565,9 +563,9 @@
     acct: andrew_kroh
     addr: 96.241.146.97
     auid: NUM:4294967295
-    exe: exe=
+    exe: /usr/sbin/sshd
     hostname: '?'
-    p: pubkey_auth
+    op: pubkey_auth
     pid: NUM:1298
     res: success
     rport: NUM:63927
@@ -575,7 +573,7 @@
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_AUTH msg=audit(1481077043.046:408): pid=1298 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=pubkey_auth rport=63927 acct="andrew_kroh" exe="/usr/sbin/sshd" hostname=? addr=96.241.146.97 terminal=? res=success'''
 - type: USER_CMD
   typeid: 0
@@ -583,15 +581,15 @@
   sequence: "475"
   values:
     auid: NUM:1000
-    cmd: ./metricbeat -c mb.dev.yml
-    d: /home/andrew_kroh
+    cmd: HEX:2E2F6D657472696362656174202D63206D622E6465762E796D6C
+    cwd: /home/andrew_kroh
     pid: NUM:1382
     res: success
     ses: NUM:3
     subj: unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
     terminal: pts/0
     uid: NUM:1000
-  message: cw
+  message: ""
   original: 'type=USER_CMD msg=audit(1481077231.363:475): pid=1382 uid=1000 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg=''cwd="/home/andrew_kroh" cmd=2E2F6D657472696362656174202D63206D622E6465762E796D6C terminal=pts/0 res=success'''
 - type: USER_END
   typeid: 0
@@ -603,14 +601,14 @@
     exe: /usr/sbin/sshd
     hostname: '?'
     id: NUM:1000
-    p: login
+    op: login
     pid: NUM:1298
     res: success
     ses: NUM:1
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: /dev/pts/0
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_END msg=audit(1481077049.033:423): pid=1298 uid=0 auid=1000 ses=1 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=login id=1000 exe="/usr/sbin/sshd" hostname=? addr=? terminal=/dev/pts/0 res=success'''
 - type: USER_ERR
   typeid: 0
@@ -620,17 +618,17 @@
     acct: '?'
     addr: 190.48.233.76
     auid: NUM:4294967295
-    exe: exe=
+    exe: /usr/sbin/sshd
     grantors: '?'
     hostname: 190.48.233.76
-    p: PAM:bad_ident
+    op: PAM:bad_ident
     pid: NUM:1560
     res: failed
     ses: NUM:4294967295
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: ssh
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_ERR msg=audit(1489641207.587:518): pid=1560 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=PAM:bad_ident grantors=? acct="?" exe="/usr/sbin/sshd" hostname=190.48.233.76 addr=190.48.233.76 terminal=ssh res=failed'''
 - type: USER_LOGIN
   typeid: 0
@@ -642,14 +640,14 @@
     exe: /usr/sbin/sshd
     hostname: pool-96-241-146-97.washdc.fios.verizon.net
     id: NUM:1000
-    p: login
+    op: login
     pid: NUM:1298
     res: success
     ses: NUM:1
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: /dev/pts/0
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_LOGIN msg=audit(1481077043.193:421): pid=1298 uid=0 auid=1000 ses=1 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=login id=1000 exe="/usr/sbin/sshd" hostname=pool-96-241-146-97.washdc.fios.verizon.net addr=96.241.146.97 terminal=/dev/pts/0 res=success'''
 - type: USER_LOGOUT
   typeid: 0
@@ -661,14 +659,14 @@
     exe: /usr/sbin/sshd
     hostname: '?'
     id: NUM:1000
-    p: login
+    op: login
     pid: NUM:1298
     res: success
     ses: NUM:1
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: /dev/pts/0
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_LOGOUT msg=audit(1481077049.033:424): pid=1298 uid=0 auid=1000 ses=1 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=login id=1000 exe="/usr/sbin/sshd" hostname=? addr=? terminal=/dev/pts/0 res=success'''
 - type: USER_MGMT
   typeid: 0
@@ -680,14 +678,14 @@
     exe: /usr/sbin/useradd
     hostname: '?'
     id: NUM:1000
-    p: add-home-dir
+    op: add-home-dir
     pid: NUM:1264
     res: success
     ses: NUM:4294967295
     subj: system_u:system_r:unconfined_service_t:s0
     terminal: '?'
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_MGMT msg=audit(1481076992.521:393): pid=1264 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg=''op=add-home-dir id=1000 exe="/usr/sbin/useradd" hostname=? addr=? terminal=? res=success'''
 - type: USER_ROLE_CHANGE
   typeid: 0
@@ -696,6 +694,7 @@
   values:
     addr: 96.241.146.97
     auid: NUM:1000
+    default-context: unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
     exe: /usr/sbin/sshd
     hostname: pool-96-241-146-97.washdc.fios.verizon.net
     pid: NUM:1298
@@ -703,10 +702,9 @@
     selected-context: unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
     ses: NUM:1
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
-    t: unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
     terminal: ssh
     uid: NUM:0
-  message: 'pam: default-contex'
+  message: 'pam:'
   original: 'type=USER_ROLE_CHANGE msg=audit(1481077043.140:415): pid=1298 uid=0 auid=1000 ses=1 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''pam: default-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 selected-context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 exe="/usr/sbin/sshd" hostname=pool-96-241-146-97.washdc.fios.verizon.net addr=96.241.146.97 terminal=ssh res=success'''
 - type: USER_START
   typeid: 0
@@ -716,17 +714,17 @@
     acct: andrew_kroh
     addr: 96.241.146.97
     auid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/sshd
     grantors: pam_selinux,pam_loginuid,pam_selinux,pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
     hostname: pool-96-241-146-97.washdc.fios.verizon.net
-    p: PAM:session_open
+    op: PAM:session_open
     pid: NUM:1298
     res: success
     ses: NUM:1
     subj: system_u:system_r:sshd_t:s0-s0:c0.c1023
     terminal: ssh
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_START msg=audit(1481077043.170:416): pid=1298 uid=0 auid=1000 ses=1 subj=system_u:system_r:sshd_t:s0-s0:c0.c1023 msg=''op=PAM:session_open grantors=pam_selinux,pam_loginuid,pam_selinux,pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog acct="andrew_kroh" exe="/usr/sbin/sshd" hostname=pool-96-241-146-97.washdc.fios.verizon.net addr=96.241.146.97 terminal=ssh res=success'''
 - type: USYS_CONFIG
   typeid: 0
@@ -735,7 +733,7 @@
   values:
     addr: '?'
     auid: NUM:4294967295
-    e: /usr/sbin/hwclock
+    exe: /usr/sbin/hwclock
     hostname: '?'
     pid: NUM:1232
     res: success
@@ -743,7 +741,7 @@
     subj: system_u:system_r:unconfined_service_t:s0
     terminal: '?'
     uid: NUM:0
-  message: changing system time ex
+  message: changing system time
   original: 'type=USYS_CONFIG msg=audit(1481076993.000:402): pid=1232 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:unconfined_service_t:s0 msg=''changing system time exe="/usr/sbin/hwclock" hostname=? addr=? terminal=? res=success'''
 - type: TTY
   typeid: 0
@@ -752,13 +750,13 @@
   values:
     auid: NUM:1000
     comm: bash
-    data: "eh\x7F\x7Fecho test\rvim /etc/pam.d/password-auth-ac\rman pam_tty_audit\rman pam.d\rvim /etc\x01sudo \x05/pamd.sy\x7F\x7F\x7F\x7F\x7F.\x7Fm.d/sy\t-a\ta\x7F-a\t\rman pam\rt\x7Fgrep sys\x7F\x7F\x7F/var/lo\tg/me\ts\t | grep pam_tty\rgrep pam_tty /var/log/mes\t\r\e[A\x01sudo \rsudo su\r"
+    data: HEX:65687F7F6563686F20746573740D76696D202F6574632F70616D2E642F70617373776F72642D617574682D61630D6D616E2070616D5F7474795F61756469740D6D616E2070616D2E640D76696D202F657463017375646F20052F70616D642E73797F7F7F7F7F2E7F6D2E642F7379092D6109617F2D61090D6D616E2070616D0D747F67726570207379737F7F7F2F7661722F6C6F09672F6D65097309207C20677265702070616D5F7474790D677265702070616D5F747479202F7661722F6C6F672F6D6573090D1B5B41017375646F200D7375646F2073750D
     major: NUM:136
     minor: NUM:0
     pid: NUM:27930
     ses: NUM:762
     uid: NUM:1000
-  message: 'tty '
+  message: tty
   original: 'type=TTY msg=audit(1491924063.550:1065565): tty pid=27930 uid=1000 auid=1000 ses=762 major=136 minor=0 comm="bash" data=65687F7F6563686F20746573740D76696D202F6574632F70616D2E642F70617373776F72642D617574682D61630D6D616E2070616D5F7474795F61756469740D6D616E2070616D2E640D76696D202F657463017375646F20052F70616D642E73797F7F7F7F7F2E7F6D2E642F7379092D6109617F2D61090D6D616E2070616D0D747F67726570207379737F7F7F2F7661722F6C6F09672F6D65097309207C20677265702070616D5F7474790D677265702070616D5F747479202F7661722F6C6F672F6D6573090D1B5B41017375646F200D7375646F2073750D'
 - type: USER_TTY
   typeid: 0
@@ -779,7 +777,7 @@
   sequence: "1065050"
   values:
     auid: NUM:1000
-    data: su - andrew_kroh
+    data: HEX:7375202D20616E647265775F6B726F68
     pid: NUM:28058
     ses: NUM:762
     subj: unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
@@ -792,9 +790,9 @@
   sequence: "1068053"
   values:
     a0: cat
-    a1: a1=
-    a2: a2=
-    a3: a3=
+    a1: btest=test
+    a2: -f
+    a3: regex=8
     argc: NUM:4
   message: ""
   original: 'type=EXECVE msg=audit(1491930997.196:1068053): argc=4 a0="cat" a1="btest=test" a2="-f" a3="regex=8"'
@@ -804,10 +802,10 @@
   sequence: "1050925"
   values:
     a0: grep
-    a1: a1=
-    a2: a2=
-    a3: a3=
-    a4: a4=
+    a1: --color=auto
+    a2: -e
+    a3: '[:alpha:]'
+    a4: /etc/passwd
     argc: NUM:5
   message: ""
   original: 'type=EXECVE msg=audit(1491863086.221:1050925): argc=5 a0="grep" a1="--color=auto" a2="-e" a3="[:alpha:]" a4="/etc/passwd"'
@@ -817,23 +815,8 @@
   sequence: "1075898"
   values:
     a0: jq
-    a1: a1=
-    a2: |-
-      {
-              "dev": "08:01",
-              "inode": "19549646",
-              "item": "0",
-              "mode": "0100775",
-              "name": "/usr/bin/jq",
-              "obj": "unconfined_u:object_r:user_home_t:s0",
-              "objtype": "NORMAL",
-              "ogid": "1001",
-              "ouid": "1000",
-              "raw_message": "audit(1491946296.757:1075834): item=0 name=\"/usr/bin/jq\" inode=19549646 dev=08:01 mode=0100775 ouid=1000 ogid=1001 rdev=00:00 obj=unconfined_u:object_r:user_home_t:s0 objtype=NORMAL",
-              "rdev": "00:00",
-              "record_type": "PATH",
-              "sequence": 1075834
-            }
+    a1: .
+    a2: HEX:7B0A202020202020202022646576223A202230383A3031222C0A202020202020202022696E6F6465223A20223139353439363436222C0A2020202020202020226974656D223A202230222C0A2020202020202020226D6F6465223A202230313030373735222C0A2020202020202020226E616D65223A20222F7573722F62696E2F6A71222C0A2020202020202020226F626A223A2022756E636F6E66696E65645F753A6F626A6563745F723A757365725F686F6D655F743A7330222C0A2020202020202020226F626A74797065223A20224E4F524D414C222C0A2020202020202020226F676964223A202231303031222C0A2020202020202020226F756964223A202231303030222C0A2020202020202020227261775F6D657373616765223A2022617564697428313439313934363239362E3735373A31303735383334293A206974656D3D30206E616D653D5C222F7573722F62696E2F6A715C2220696E6F64653D3139353439363436206465763D30383A3031206D6F64653D30313030373735206F7569643D31303030206F6769643D3130303120726465763D30303A3030206F626A3D756E636F6E66696E65645F753A6F626A6563745F723A757365725F686F6D655F743A7330206F626A747970653D4E4F524D414C222C0A20202020202020202272646576223A202230303A3030222C0A2020202020202020227265636F72645F74797065223A202250415448222C0A20202020202020202273657175656E6365223A20313037353833340A2020202020207D
     argc: NUM:3
   message: ""
   original: 'type=EXECVE msg=audit(1491946471.575:1075898): argc=3 a0="jq" a1="." a2=7B0A202020202020202022646576223A202230383A3031222C0A202020202020202022696E6F6465223A20223139353439363436222C0A2020202020202020226974656D223A202230222C0A2020202020202020226D6F6465223A202230313030373735222C0A2020202020202020226E616D65223A20222F7573722F62696E2F6A71222C0A2020202020202020226F626A223A2022756E636F6E66696E65645F753A6F626A6563745F723A757365725F686F6D655F743A7330222C0A2020202020202020226F626A74797065223A20224E4F524D414C222C0A2020202020202020226F676964223A202231303031222C0A2020202020202020226F756964223A202231303030222C0A2020202020202020227261775F6D657373616765223A2022617564697428313439313934363239362E3735373A31303735383334293A206974656D3D30206E616D653D5C222F7573722F62696E2F6A715C2220696E6F64653D3139353439363436206465763D30383A3031206D6F64653D30313030373735206F7569643D31303030206F6769643D3130303120726465763D30303A3030206F626A3D756E636F6E66696E65645F753A6F626A6563745F723A757365725F686F6D655F743A7330206F626A747970653D4E4F524D414C222C0A20202020202020202272646576223A202230303A3030222C0A2020202020202020227265636F72645F74797065223A202250415448222C0A20202020202020202273657175656E6365223A20313037353833340A2020202020207D'
@@ -851,13 +834,13 @@
     comm: bash
     egid: NUM:1001
     euid: NUM:1000
-    exe: exe=
+    exe: /usr/bin/bash
     exit: NUM:0
     fsgid: NUM:1001
     fsuid: NUM:1000
     gid: NUM:1001
     items: NUM:0
-    key: key=
+    key: kill_signals
     pid: NUM:8158
     ppid: NUM:1
     ses: NUM:790
@@ -876,7 +859,7 @@
   sequence: "1209"
   values:
     auid: NUM:4294967295
-    key: key=
+    key: pam
     list: NUM:4
     op: add_rule
     res: NUM:1
@@ -893,7 +876,7 @@
     inode: NUM:1442434
     item: NUM:0
     mode: NUM:042775
-    name: /share/general/path_redacted
+    name: HEX:2F73686172652F67656E6572616C2F706174685F7265646163746564
     nametype: NORMAL
     ogid: NUM:7003
     ouid: NUM:10067
@@ -905,18 +888,18 @@
   timestamp: "1492896301.818"
   sequence: "19955"
   values:
-    acct: (invalid user)
+    acct: HEX:28696E76616C6964207573657229
     addr: 179.38.151.221
     auid: NUM:4294967295
     exe: /usr/sbin/sshd
     hostname: '?'
-    p: login
+    op: login
     pid: NUM:12635
     res: failed
     ses: NUM:4294967295
     terminal: sshd
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_LOGIN msg=audit(1492896301.818:19955): pid=12635 uid=0 auid=4294967295 ses=4294967295 msg=''op=login acct=28696E76616C6964207573657229 exe="/usr/sbin/sshd" hostname=? addr=179.38.151.221 terminal=sshd res=failed'''
 - type: USER_LOGIN
   typeid: 0
@@ -928,13 +911,13 @@
     exe: /usr/sbin/sshd
     hostname: 72.83.230.100
     id: NUM:1001
-    p: login
+    op: login
     pid: NUM:11396
     res: success
     ses: NUM:36
     terminal: /dev/pts/1
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=USER_LOGIN msg=audit(1492810797.778:12651): pid=11396 uid=0 auid=1001 ses=36 msg=''op=login id=1001 exe="/usr/sbin/sshd" hostname=72.83.230.100 addr=72.83.230.100 terminal=/dev/pts/1 res=success'''
 - type: AVC
   typeid: 0
@@ -942,13 +925,13 @@
   sequence: "61207"
   values:
     apparmor: DENIED
-    comm: comm=
-    denied_mask: denied_mask=
-    operation: operation=
-    peer: peer=
+    comm: metricbeat
+    denied_mask: trace
+    operation: ptrace
+    peer: unconfined
     pid: NUM:5571
-    profile: profile=
-    requested_mask: requested_mask=
+    profile: docker-default
+    requested_mask: trace
   message: ""
   original: 'type=AVC msg=audit(1524662933.080:61207): apparmor="DENIED" operation="ptrace" profile="docker-default" pid=5571 comm="metricbeat" requested_mask="trace" denied_mask="trace" peer="unconfined"'
 - type: SYSCALL
@@ -965,13 +948,13 @@
     comm: grep
     egid: NUM:0
     euid: NUM:0
-    exe: exe=
+    exe: /bin/grep
     exit: NUM:0
     fsgid: NUM:0
     fsuid: NUM:0
     gid: NUM:0
     items: NUM:2
-    key: "65786563013634626974"
+    key: HEX:65786563013634626974
     pid: NUM:27854
     ppid: NUM:27851
     ses: NUM:4294967295
@@ -982,7 +965,7 @@
     tty: (none)
     uid: NUM:0
   message: ""
-  original: 'type=SYSCALL msg=audit(1515619721.392:106081): arch=c000003e syscall=59 success=yes exit=0 a0=55df1048ec88 a1=55df1048ec38 a2=55df1048ec58 a3=1 items=2 ppid=27851 pid=27854 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="grep" exe="/bin/grep" key=65786563013634626974"'
+  original: 'type=SYSCALL msg=audit(1515619721.392:106081): arch=c000003e syscall=59 success=yes exit=0 a0=55df1048ec88 a1=55df1048ec38 a2=55df1048ec58 a3=1 items=2 ppid=27851 pid=27854 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="grep" exe="/bin/grep" key=65786563013634626974'
 - type: AVC
   typeid: 0
   timestamp: "1170021493.977"
@@ -991,12 +974,12 @@
     comm: pickup
     dev: hda7
     ino: NUM:14911367
-    name: name=
+    name: maildrop
     pid: NUM:13010
     scontext: system_u:system_r:postfix_pickup_t:s0
     tclass: dir
     tcontext: system_u:object_r:postfix_spool_maildrop_t:s0
-  message: 'avc:  denied  { read } for  '
+  message: 'avc:  denied  { read } for '
   original: 'type=AVC msg=audit(1170021493.977:293): avc:  denied  { read } for  pid=13010 comm="pickup" name="maildrop" dev=hda7 ino=14911367 scontext=system_u:system_r:postfix_pickup_t:s0 tcontext=system_u:object_r:postfix_spool_maildrop_t:s0 tclass=dir'
 - type: SYSCALL
   typeid: 0
@@ -1012,7 +995,7 @@
     comm: pickup
     egid: NUM:890
     euid: NUM:890
-    exe: exe=
+    exe: /usr/libexec/postfix/pickup
     exit: NUM:-13
     fsgid: NUM:890
     fsuid: NUM:890
@@ -1036,7 +1019,7 @@
   sequence: "293"
   values:
     cwd: /var/spool/postfix
-  message: ' '
+  message: ""
   original: 'type=CWD msg=audit(1170021493.977:293):  cwd="/var/spool/postfix"'
 - type: PATH
   typeid: 0
@@ -1059,6 +1042,7 @@
   timestamp: "1170021601.340"
   sequence: "294"
   values:
+    acct: root
     addr: '?'
     auid: NUM:4294967295
     exe: /usr/sbin/crond
@@ -1066,16 +1050,16 @@
     pid: NUM:13015
     res: success
     subj: system_u:system_r:crond_t:s0-s0:c0.c1023
-    t: root
     terminal: cron
     uid: NUM:0
-  message: 'PAM: accounting acc'
+  message: 'PAM: accounting'
   original: 'type=USER_ACCT msg=audit(1170021601.340:294): user pid=13015 uid=0 auid=4294967295 subj=system_u:system_r:crond_t:s0-s0:c0.c1023 msg=''PAM: accounting acct=root : exe="/usr/sbin/crond" hostname=? addr=? terminal=cron res=success'''
 - type: CRED_ACQ
   typeid: 0
   timestamp: "1170021601.342"
   sequence: "295"
   values:
+    acct: root
     addr: '?'
     auid: NUM:4294967295
     exe: /usr/sbin/crond
@@ -1083,10 +1067,9 @@
     pid: NUM:13015
     res: success
     subj: system_u:system_r:crond_t:s0-s0:c0.c1023
-    t: root
     terminal: cron
     uid: NUM:0
-  message: 'PAM: setcred acc'
+  message: 'PAM: setcred'
   original: 'type=CRED_ACQ msg=audit(1170021601.342:295): user pid=13015 uid=0 auid=4294967295 subj=system_u:system_r:crond_t:s0-s0:c0.c1023 msg=''PAM: setcred acct=root : exe="/usr/sbin/crond" hostname=? addr=? terminal=cron res=success'''
 - type: LOGIN
   typeid: 0
@@ -1097,13 +1080,14 @@
     old auid: NUM:4294967295
     pid: NUM:13015
     uid: NUM:0
-  message: 'login '
+  message: login
   original: 'type=LOGIN msg=audit(1170021601.343:296): login pid=13015 uid=0 old auid=4294967295 new auid=0'
 - type: USER_START
   typeid: 0
   timestamp: "1170021601.344"
   sequence: "297"
   values:
+    acct: root
     addr: ?,
     auid: NUM:0
     exe: /usr/sbin/crond
@@ -1111,16 +1095,16 @@
     pid: NUM:13015
     res: success)
     subj: system_u:system_r:crond_t:s0-s0:c0.c1023
-    t: root
     terminal: cron
     uid: NUM:0
-  message: 'PAM: session open acc'
+  message: 'PAM: session open'
   original: 'type=USER_START msg=audit(1170021601.344:297): user pid=13015 uid=0 auid=0 subj=system_u:system_r:crond_t:s0-s0:c0.c1023 msg=''PAM: session open acct=root : exe="/usr/sbin/crond" (hostname=?, addr=?, terminal=cron res=success)'''
 - type: CRED_DISP
   typeid: 0
   timestamp: "1170021601.364"
   sequence: "298"
   values:
+    acct: root
     addr: ?,
     auid: NUM:0
     exe: /usr/sbin/crond
@@ -1128,16 +1112,16 @@
     pid: NUM:13015
     res: success)
     subj: system_u:system_r:crond_t:s0-s0:c0.c1023
-    t: root
     terminal: cron
     uid: NUM:0
-  message: 'PAM: setcred acc'
+  message: 'PAM: setcred'
   original: 'type=CRED_DISP msg=audit(1170021601.364:298): user pid=13015 uid=0 auid=0 subj=system_u:system_r:crond_t:s0-s0:c0.c1023 msg=''PAM: setcred acct=root : exe="/usr/sbin/crond" (hostname=?, addr=?, terminal=cron res=success)'''
 - type: USER_END
   typeid: 0
   timestamp: "1170021601.366"
   sequence: "299"
   values:
+    acct: root
     addr: ?,
     auid: NUM:0
     exe: /usr/sbin/crond
@@ -1145,10 +1129,9 @@
     pid: NUM:13015
     res: success)
     subj: system_u:system_r:crond_t:s0-s0:c0.c1023
-    t: root
     terminal: cron
     uid: NUM:0
-  message: 'PAM: session close acc'
+  message: 'PAM: session close'
   original: 'type=USER_END msg=audit(1170021601.366:299): user pid=13015 uid=0 auid=0 subj=system_u:system_r:crond_t:s0-s0:c0.c1023 msg=''PAM: session close acct=root : exe="/usr/sbin/crond" (hostname=?, addr=?, terminal=cron res=success)'''
 - type: SYSCALL
   typeid: 0
@@ -1157,14 +1140,14 @@
   values:
     a0: c
     a1: 56420184ade0
-    a2: !!binary VkIBhnUQ
+    a2: HEX:564201867510
     a3: NUM:0
     arch: c000003e
     auid: NUM:1000
     comm: sshd
     egid: NUM:1000
     euid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/sshd
     exit: NUM:1
     fsgid: NUM:1000
     fsuid: NUM:1000
@@ -1197,7 +1180,7 @@
     comm: bash
     egid: NUM:0
     euid: NUM:0
-    exe: exe=
+    exe: /usr/bin/bash
     exit: NUM:0
     fsgid: NUM:0
     fsuid: NUM:0
@@ -1229,7 +1212,7 @@
   timestamp: "1451781471.394"
   sequence: "194435"
   values:
-    proctitle: 'sshd: burn [priv]'
+    proctitle: HEX:737368643A206275726E205B707269765D
   message: ""
   original: 'type=PROCTITLE msg=audit(1451781471.394:194435): proctitle=737368643A206275726E205B707269765D'
 - type: SYSCALL
@@ -1246,7 +1229,7 @@
     comm: bash
     egid: NUM:0
     euid: NUM:0
-    exe: exe=
+    exe: /usr/bin/bash
     exit: NUM:0
     fsgid: NUM:0
     fsuid: NUM:0
@@ -1279,7 +1262,7 @@
     comm: sshd
     egid: NUM:1000
     euid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/sshd
     exit: NUM:0
     fsgid: NUM:1000
     fsuid: NUM:1000
@@ -1311,7 +1294,7 @@
   timestamp: "1451781471.394"
   sequence: "194437"
   values:
-    proctitle: 'sshd: burn [priv]'
+    proctitle: HEX:737368643A206275726E205B707269765D
   message: ""
   original: 'type=PROCTITLE msg=audit(1451781471.394:194437): proctitle=737368643A206275726E205B707269765D'
 - type: SYSCALL
@@ -1328,7 +1311,7 @@
     comm: bash
     egid: NUM:0
     euid: NUM:0
-    exe: exe=
+    exe: /usr/bin/bash
     exit: NUM:0
     fsgid: NUM:0
     fsuid: NUM:0
@@ -1361,7 +1344,7 @@
     comm: sshd
     egid: NUM:1000
     euid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/sshd
     exit: NUM:0
     fsgid: NUM:1000
     fsuid: NUM:1000
@@ -1385,7 +1368,7 @@
   timestamp: "1451781471.394"
   sequence: "194439"
   values:
-    proctitle: 'sshd: burn [priv]'
+    proctitle: HEX:737368643A206275726E205B707269765D
   message: ""
   original: 'type=PROCTITLE msg=audit(1451781471.394:194439): proctitle=737368643A206275726E205B707269765D'
 - type: SYSCALL
@@ -1395,14 +1378,14 @@
   values:
     a0: NUM:7
     a1: 7ffdac6fe9c0
-    a2: !!binary VkIBhnUQ
+    a2: HEX:564201867510
     a3: NUM:8
     arch: c000003e
     auid: NUM:1000
     comm: sshd
     egid: NUM:1000
     euid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/sshd
     exit: NUM:0
     fsgid: NUM:1000
     fsuid: NUM:1000
@@ -1434,7 +1417,7 @@
   timestamp: "1451781471.394"
   sequence: "194440"
   values:
-    proctitle: 'sshd: burn [priv]'
+    proctitle: HEX:737368643A206275726E205B707269765D
   message: ""
   original: 'type=PROCTITLE msg=audit(1451781471.394:194440): proctitle=737368643A206275726E205B707269765D'
 - type: ADD_GROUP
@@ -1445,16 +1428,16 @@
     acct: frodo
     addr: '?'
     auid: NUM:1000
-    exe: exe=
+    exe: /usr/sbin/useradd
     hostname: '?'
-    p: add-group
+    op: add-group
     pid: NUM:1321
     res: success
     ses: NUM:1
     subj: unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
     terminal: pts/0
     uid: NUM:0
-  message: o
+  message: ""
   original: 'type=ADD_GROUP msg=audit(1451781471.602:194894): pid=1321 uid=0 auid=1000 ses=1 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg=''op=add-group acct="frodo" exe="/usr/sbin/useradd" hostname=? addr=? terminal=pts/0 res=success'''
 - type: EXECVE
   typeid: 0
@@ -1462,10 +1445,10 @@
   sequence: "1865"
   values:
     a0: useradd
-    a1: a1=
-    a2: a2=
-    a3: a3=
-    a4: a4=
+    a1: -u
+    a2: "3005"
+    a3: -m
+    a4: trainer5
     argc: NUM:5
   message: ""
   original: 'type=EXECVE msg=audit(1507304439.922:1865): argc=5 a0="useradd" a1="-u" a2="3005" a3="-m" a4="trainer5"'
@@ -1479,7 +1462,7 @@
     code: "0x0"
     comm: sshd
     compat: NUM:0
-    exe: exe=
+    exe: /usr/sbin/sshd
     gid: NUM:22
     ip: "0xb7670aac"
     pid: NUM:11217

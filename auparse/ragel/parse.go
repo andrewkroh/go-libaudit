@@ -6,7 +6,7 @@ package ragel
 
 // An SVG rendering of the state machine can be viewed by opening auditd.svg in
 // Chrome / Firefox.
-//go:generate ragel -V -M inner_kvs -p auditd.go.rl -o auditd.dot
+//go:generate ragel -V -M audit_msg -p auditd.go.rl -o auditd.dot
 //go:generate dot -T svg auditd.dot -o auditd.svg
 
 type Message struct {

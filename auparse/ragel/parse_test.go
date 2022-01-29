@@ -68,28 +68,33 @@ func TestOldDataUnpack(t *testing.T) {
 
 func TestHexNumStringValue(t *testing.T) {
 	t.Run("hex", func(t *testing.T) {
-		var m Message
-		err := m.unpackData("ABCDEF", Value)
+		v, err := parseValue("ABCDEF")
 		require.NoError(t, err)
+		require.Equal(t, v, "HEX:ABCDEF")
 	})
 	t.Run("num", func(t *testing.T) {
-		var m Message
-		err := m.unpackData("123", Value)
+		v, err := parseValue("123")
 		require.NoError(t, err)
+		require.Equal(t, v, "NUM:123")
 	})
 	t.Run("string", func(t *testing.T) {
-		var m Message
-		err := m.unpackData("ab:cd:ef", Value)
+		v, err := parseValue("ab:cd:ef")
 		require.NoError(t, err)
+		require.Equal(t, v, "ab:cd:ef")
 	})
 	t.Run("dq", func(t *testing.T) {
-		var m Message
-		err := m.unpackData(`"123"`, Value)
+		v, err := parseValue(`"123"`)
 		require.NoError(t, err)
+		require.Equal(t, v, "123")
 	})
 	t.Run("sq", func(t *testing.T) {
-		var m Message
-		err := m.unpackData(`'123'`, Value)
+		v, err := parseValue(`'123'`)
 		require.NoError(t, err)
+		require.Equal(t, v, "123")
+	})
+	t.Run("empty", func(t *testing.T) {
+		v, err := parseValue("")
+		require.NoError(t, err)
+		require.Equal(t, v, "")
 	})
 }
