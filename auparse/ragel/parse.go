@@ -1,7 +1,7 @@
 package ragel
 
 // Parser is generated from a ragel state machine using the following command:
-//go:generate ragel -Z -G1 auditd.go.rl -o auditd.go
+//go:generate ragel -Z -G2 auditd.go.rl -o auditd.go
 // go:generate goimports -l -w auditd.go
 
 // An SVG rendering of the state machine can be viewed by opening auditd.svg in
