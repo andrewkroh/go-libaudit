@@ -100,7 +100,7 @@ msg_id = digit{4} >mark %set_msg_id;
 unknown_audit_msg_type = "UNKNOWN" open_bracket msg_id close_bracket;
 
 # Example: USER_CMD
-known_audit_msg_type = (upper (upper | underscore)+)  >mark %set_msgtype;
+known_audit_msg_type = (upper (upper | underscore)+) >mark %set_msgtype;
 
 audit_msg_type = "type=" (known_audit_msg_type | unknown_audit_msg_type);
 
