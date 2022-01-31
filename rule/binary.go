@@ -22,7 +22,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/elastic/go-libaudit/v2/sys"
 )
@@ -88,7 +88,7 @@ func fromWireFormat(data WireFormat) (*auditRuleData, error) {
 
 	reader := bytes.NewReader(data)
 	if err := binary.Read(reader, endianness, &partialRule); err != nil {
-		return nil, errors.Wrap(err, "deserialization of rule data failed")
+		return nil, fmt.Errorf("deserialization of rule data failed: %w", err)
 	}
 
 	rule := &auditRuleData{
@@ -109,7 +109,7 @@ func fromWireFormat(data WireFormat) (*auditRuleData, error) {
 	if rule.BufLen > 0 {
 		rule.Buf = make([]byte, rule.BufLen)
 		if _, err := reader.Read(rule.Buf); err != nil {
-			return nil, errors.Wrap(err, "deserialization of buf failed")
+			return nil, fmt.Errorf("deserialization of buf failed: %w", err)
 		}
 	}
 

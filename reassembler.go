@@ -23,7 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/elastic/go-libaudit/v2/auparse"
 )

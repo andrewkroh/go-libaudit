@@ -29,7 +29,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/elastic/go-libaudit/v2"
 	"github.com/elastic/go-libaudit/v2/auparse"
@@ -76,53 +76,53 @@ func read() error {
 	if *receiveOnly {
 		client, err = libaudit.NewMulticastAuditClient(diagWriter)
 		if err != nil {
-			return errors.Wrap(err, "failed to create receive-only audit client")
+			return fmt.Errorf("failed to create receive-only audit client: %w", err)
 		}
 		defer client.Close()
 	} else {
 		client, err = libaudit.NewAuditClient(diagWriter)
 		if err != nil {
-			return errors.Wrap(err, "failed to create audit client")
+			return fmt.Errorf("failed to create audit client: %w", err)
 		}
 		defer client.Close()
 
 		status, err := client.GetStatus()
 		if err != nil {
-			return errors.Wrap(err, "failed to get audit status")
+			return fmt.Errorf("failed to get audit status: %w", err)
 		}
 		log.Printf("received audit status=%+v", status)
 
 		if status.Enabled == 0 {
 			log.Println("enabling auditing in the kernel")
 			if err = client.SetEnabled(true, libaudit.WaitForReply); err != nil {
-				return errors.Wrap(err, "failed to set enabled=true")
+				return fmt.Errorf("failed to set enabled=true: %w", err)
 			}
 		}
 
 		if status.RateLimit != uint32(*rate) {
 			log.Printf("setting rate limit in kernel to %v", *rate)
 			if err = client.SetRateLimit(uint32(*rate), libaudit.NoWait); err != nil {
-				return errors.Wrap(err, "failed to set rate limit to unlimited")
+				return fmt.Errorf("failed to set rate limit to unlimited: %w", err)
 			}
 		}
 
 		if status.BacklogLimit != uint32(*backlog) {
 			log.Printf("setting backlog limit in kernel to %v", *backlog)
 			if err = client.SetBacklogLimit(uint32(*backlog), libaudit.NoWait); err != nil {
-				return errors.Wrap(err, "failed to set backlog limit")
+				return fmt.Errorf("failed to set backlog limit: %w", err)
 			}
 		}
 
 		if status.Enabled != 2 {
 			log.Printf("setting kernel settings as immutable")
 			if err = client.SetImmutable(libaudit.NoWait); err != nil {
-				return errors.Wrap(err, "failed to set kernel as immutable")
+				return fmt.Errorf("failed to set kernel as immutable: %w", err)
 			}
 		}
 
 		log.Printf("sending message to kernel registering our PID (%v) as the audit daemon", os.Getpid())
 		if err = client.SetPID(libaudit.NoWait); err != nil {
-			return errors.Wrap(err, "failed to set audit PID")
+			return fmt.Errorf("failed to set audit PID: %w", err)
 		}
 	}
 
@@ -133,7 +133,7 @@ func receive(r *libaudit.AuditClient) error {
 	for {
 		rawEvent, err := r.Receive(false)
 		if err != nil {
-			return errors.Wrap(err, "receive failed")
+			return fmt.Errorf("receive failed: %w", err)
 		}
 
 		// Messages from 1300-2999 are valid audit messages.

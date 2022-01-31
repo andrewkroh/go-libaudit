@@ -22,14 +22,13 @@ package libaudit
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 	"os"
 	"sync"
 	"syscall"
 	"time"
 	"unsafe"
-
-	"github.com/pkg/errors"
 
 	"github.com/elastic/go-libaudit/v2/auparse"
 	"github.com/elastic/go-libaudit/v2/sys"
@@ -114,9 +113,9 @@ func newAuditClient(netlinkGroups uint32, resp io.Writer) (*AuditClient, error) 
 	if err != nil {
 		switch err {
 		case syscall.EINVAL, syscall.EPROTONOSUPPORT, syscall.EAFNOSUPPORT:
-			return nil, errors.Wrap(err, "audit not supported by kernel")
+			return nil, fmt.Errorf("audit not supported by kernel: %w", err)
 		default:
-			return nil, errors.Wrap(err, "failed to open audit netlink socket")
+			return nil, fmt.Errorf("failed to open audit netlink socket: %w", err)
 		}
 	}
 
@@ -128,17 +127,17 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	// Send AUDIT_GET message to the kernel.
 	seq, err := c.GetStatusAsync(true)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed sending request")
+		return nil, fmt.Errorf("failed sending request: %w", err)
 	}
 
 	// Get the ack message which is a NLMSG_ERROR type whose error code is SUCCESS.
 	ack, err := c.getReply(seq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get audit status ack")
+		return nil, fmt.Errorf("failed to get audit status ack: %w", err)
 	}
 
 	if ack.Header.Type != syscall.NLMSG_ERROR {
-		return nil, errors.Errorf("unexpected ACK to GET, got type=%d", ack.Header.Type)
+		return nil, fmt.Errorf("unexpected ACK to GET, got type=%d", ack.Header.Type)
 	}
 
 	if err = ParseNetlinkError(ack.Data); err != nil {
@@ -149,16 +148,16 @@ func (c *AuditClient) GetStatus() (*AuditStatus, error) {
 	// our original request.
 	reply, err := c.getReply(seq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get audit status reply")
+		return nil, fmt.Errorf("failed to get audit status reply: %w", err)
 	}
 
 	if reply.Header.Type != AuditGet {
-		return nil, errors.Errorf("unexpected reply to GET, got type=%d", reply.Header.Type)
+		return nil, fmt.Errorf("unexpected reply to GET, got type=%d", reply.Header.Type)
 	}
 
 	replyStatus := &AuditStatus{}
 	if err := replyStatus.FromWireFormat(reply.Data); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal reply")
+		return nil, fmt.Errorf("failed to unmarshal reply: %w", err)
 	}
 
 	return replyStatus, nil
@@ -196,17 +195,17 @@ func (c *AuditClient) GetRules() ([][]byte, error) {
 	// Send AUDIT_LIST_RULES message to the kernel.
 	seq, err := c.Netlink.Send(msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed sending request")
+		return nil, fmt.Errorf("failed sending request: %w", err)
 	}
 
 	// Get the ack message which is a NLMSG_ERROR type whose error code is SUCCESS.
 	ack, err := c.getReply(seq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get audit ACK")
+		return nil, fmt.Errorf("failed to get audit ACK: %w", err)
 	}
 
 	if ack.Header.Type != syscall.NLMSG_ERROR {
-		return nil, errors.Errorf("unexpected ACK to LIST_RULES, got type=%d", ack.Header.Type)
+		return nil, fmt.Errorf("unexpected ACK to LIST_RULES, got type=%d", ack.Header.Type)
 	}
 
 	if err = ParseNetlinkError(ack.Data); err != nil {
@@ -217,7 +216,7 @@ func (c *AuditClient) GetRules() ([][]byte, error) {
 	for {
 		reply, err := c.getReply(seq)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed receive rule data")
+			return nil, fmt.Errorf("failed receive rule data: %w", err)
 		}
 
 		if reply.Header.Type == syscall.NLMSG_DONE {
@@ -225,7 +224,7 @@ func (c *AuditClient) GetRules() ([][]byte, error) {
 		}
 
 		if reply.Header.Type != uint16(auparse.AUDIT_LIST_RULES) {
-			return nil, errors.Errorf("unexpected message type %d while receiving rules", reply.Header.Type)
+			return nil, fmt.Errorf("unexpected message type %d while receiving rules", reply.Header.Type)
 		}
 
 		rule := make([]byte, len(reply.Data))
@@ -245,7 +244,7 @@ func (c *AuditClient) DeleteRules() (int, error) {
 
 	for i, rule := range rules {
 		if err := c.DeleteRule(rule); err != nil {
-			return 0, errors.Wrapf(err, "failed to delete rule %v of %v", i, len(rules))
+			return 0, fmt.Errorf("failed to delete rule %v of %v", i, len(rules), err)
 		}
 	}
 
@@ -265,12 +264,12 @@ func (c *AuditClient) DeleteRule(rule []byte) error {
 	// Send AUDIT_DEL_RULE message to the kernel.
 	seq, err := c.Netlink.Send(msg)
 	if err != nil {
-		return errors.Wrapf(err, "failed sending delete request")
+		return fmt.Errorf("failed sending delete request: %w", err)
 	}
 
 	_, err = c.getReply(seq)
 	if err != nil {
-		return errors.Wrap(err, "failed to get ACK to rule delete request")
+		return fmt.Errorf("failed to get ACK to rule delete request: %w", err)
 	}
 
 	return nil
@@ -289,23 +288,23 @@ func (c *AuditClient) AddRule(rule []byte) error {
 	// Send AUDIT_ADD_RULE message to the kernel.
 	seq, err := c.Netlink.Send(msg)
 	if err != nil {
-		return errors.Wrapf(err, "failed sending delete request")
+		return fmt.Errorf("failed sending delete request: %w", err)
 	}
 
 	ack, err := c.getReply(seq)
 	if err != nil {
-		return errors.Wrap(err, "failed to get ACK to rule delete request")
+		return fmt.Errorf("failed to get ACK to rule delete request: %w", err)
 	}
 
 	if ack.Header.Type != syscall.NLMSG_ERROR {
-		return errors.Errorf("unexpected ACK to AUDIT_ADD_RULE, got type=%d", ack.Header.Type)
+		return fmt.Errorf("unexpected ACK to AUDIT_ADD_RULE, got type=%d", ack.Header.Type)
 	}
 
 	if err = ParseNetlinkError(ack.Data); err != nil {
 		if errno, ok := err.(syscall.Errno); ok && errno == syscall.EEXIST {
 			return errors.New("rule exists")
 		}
-		return errors.Wrap(err, "error adding audit rule")
+		return fmt.Errorf("error adding audit rule: %w", err)
 	}
 
 	return nil
@@ -460,7 +459,7 @@ func (c *AuditClient) WaitForPendingACKs() error {
 			return err
 		}
 		if ack.Header.Type != syscall.NLMSG_ERROR {
-			return errors.Errorf("unexpected ACK to SET, type=%d", ack.Header.Type)
+			return fmt.Errorf("unexpected ACK to SET, type=%d", ack.Header.Type)
 		}
 		if err := ParseNetlinkError(ack.Data); err != nil {
 			return err
@@ -489,7 +488,7 @@ func (c *AuditClient) getReply(seq uint32) (*syscall.NetlinkMessage, error) {
 					time.Sleep(50 * time.Millisecond)
 					continue
 				default:
-					return nil, errors.Wrap(err, "error receiving audit reply")
+					return nil, fmt.Errorf("error receiving audit reply: %w", err)
 				}
 			}
 			break
@@ -503,7 +502,7 @@ func (c *AuditClient) getReply(seq uint32) (*syscall.NetlinkMessage, error) {
 		receiveMore = msg.Header.Seq == 0 && seq != 0
 	}
 	if msg.Header.Seq != seq {
-		return nil, errors.Errorf("unexpected sequence number for reply (expected %v but got %v)",
+		return nil, fmt.Errorf("unexpected sequence number for reply (expected %v but got %v)",
 			seq, msg.Header.Seq)
 	}
 	return &msg, nil
@@ -520,7 +519,7 @@ func (c *AuditClient) set(status AuditStatus, mode WaitMode) error {
 
 	seq, err := c.Netlink.Send(msg)
 	if err != nil {
-		return errors.Wrap(err, "failed sending request")
+		return fmt.Errorf("failed sending request: %w", err)
 	}
 
 	if mode == NoWait {
@@ -534,7 +533,7 @@ func (c *AuditClient) set(status AuditStatus, mode WaitMode) error {
 	}
 
 	if ack.Header.Type != syscall.NLMSG_ERROR {
-		return errors.Errorf("unexpected ACK to SET, type=%d", ack.Header.Type)
+		return fmt.Errorf("unexpected ACK to SET, type=%d", ack.Header.Type)
 	}
 
 	if err := ParseNetlinkError(ack.Data); err != nil {

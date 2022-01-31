@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 const nullTerminator = "\x00"
